@@ -16,6 +16,12 @@ type Config struct {
 	DeepSeekModel   string
 	DeepSeekBaseURL string
 	AppEncKey       string // base64 (32 байта) для шифрования ключей провайдеров ИИ
+
+	// Приём платежей (ЮKassa). Если ключи не заданы — оплата отключена,
+	// остальной сервис работает без изменений.
+	YooKassaShopID    string
+	YooKassaSecretKey string
+	PublicBaseURL     string // база для return_url после оплаты
 }
 
 func Load() (*Config, error) {
@@ -29,6 +35,10 @@ func Load() (*Config, error) {
 		DeepSeekModel:   env("DEEPSEEK_MODEL", "deepseek-v4-flash"),
 		DeepSeekBaseURL: env("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
 		AppEncKey:       env("APP_ENC_KEY", ""),
+
+		YooKassaShopID:    env("YOOKASSA_SHOP_ID", ""),
+		YooKassaSecretKey: env("YOOKASSA_SECRET_KEY", ""),
+		PublicBaseURL:     env("PUBLIC_BASE_URL", "https://finaudit.site"),
 	}, nil
 }
 

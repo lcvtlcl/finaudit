@@ -24,6 +24,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/wwpp/finaudit/internal/billing"
 	"github.com/wwpp/finaudit/internal/categorize"
 	"github.com/wwpp/finaudit/internal/checks"
 	"github.com/wwpp/finaudit/internal/compliance"
@@ -36,6 +37,7 @@ import (
 	"github.com/wwpp/finaudit/internal/llm"
 	"github.com/wwpp/finaudit/internal/metrics"
 	"github.com/wwpp/finaudit/internal/models"
+	"github.com/wwpp/finaudit/internal/notify"
 	"github.com/wwpp/finaudit/internal/rating"
 	"github.com/wwpp/finaudit/internal/simulate"
 	"github.com/wwpp/finaudit/internal/storage/postgres"
@@ -261,6 +263,26 @@ func NewRouter(logger *slog.Logger, cfg *config.Config, store *postgres.Store) h
 	newBatchAPI(store, cfg, logger, cipher).registerRoutes(r)
 	newDocAPI(store, cfg, logger, cipher).registerRoutes(r)
 	newPlannedAPI(store).registerRoutes(r)
+
+	// Оповещения команды в Telegram (заявки с сайта, успешные оплаты).
+	// Без токена оповещения просто выключены.
+	tg, err := notify.NewTelegramFromEnv(logger)
+	if err != nil {
+		logger.Warn("оповещения в Telegram выключены", "err", err)
+		tg = nil
+	}
+
+	// Приём оплаты подписки (ЮKassa). Без ключей магазина оплата выключена,
+	// остальной сервис работает как обычно.
+	payClient, err := billing.NewClientFromEnv()
+	if err != nil {
+		logger.Warn("приём платежей выключен", "err", err)
+		payClient = nil
+	}
+	newBillingAPI(store, payClient, logger, cfg.PublicBaseURL, tg).registerRoutes(r)
+
+	// Обратная связь с сайта: обращение падает в БД и сразу прилетает в Telegram.
+	newContactAPI(store, logger, tg).registerRoutes(r)
 
 	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

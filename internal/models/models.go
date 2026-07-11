@@ -43,7 +43,7 @@ type Transaction struct {
 // Цифры заполняет код (metrics). Summary и Recommendations заполняет LLM-слой.
 // Подробное описание всех полей: CONTRACT.md
 type AuditResult struct {
-	UploadID          int64   `json:"upload_id"` // ID загруженного файла (0 = не сохранено в БД)
+	UploadID          int64   `json:"upload_id"`            // ID загруженного файла (0 = не сохранено в БД)
 	TaxRegime         string  `json:"tax_regime,omitempty"` // налоговый режим пользователя (usn/npd/osno) — для чек-листа и промпта
 	Period            Period  `json:"period"`
 	OpeningBalance    float64 `json:"opening_balance"`

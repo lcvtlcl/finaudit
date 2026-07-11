@@ -269,7 +269,7 @@
           <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Ручные правки с пересчётом · свой ключ ИИ</span></li>
           <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Учёт формы бизнеса (ИП / ООО / самозанятый)</span></li>
         </ul>
-        <a href="login.html" class="btn btn-primary">Попробовать 14 дней</a>
+        <button type="button" class="btn btn-primary" onclick="subscribe('pro')">Оформить подписку</button>
       </div>
 
       <div class="price-card selfhosted">
@@ -285,7 +285,7 @@
           <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Лицензия и поддержка</span></li>
           <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Для бухгалтерских аутсорсеров и чувствительных ниш</span></li>
         </ul>
-        <a href="https://github.com/lcvtlcl/finaudit/blob/main/SELF_HOSTED.md" target="_blank" rel="noopener" class="btn btn-light">Гайд по развёртыванию</a>
+        <a href="contacts.html?topic=selfhosted" class="btn btn-light">Оставить заявку</a>
       </div>
 
     </div>
@@ -300,11 +300,38 @@
       <span class="muted">© 2026</span>
     </div>
     <div class="footer-links">
-      <a href="privacy.html">Политика конфиденциальности</a>
-      <a href="https://github.com/lcvtlcl/finaudit" target="_blank" rel="noopener">Исходный код</a>
+      <a href="#pricing">Тарифы</a>
+      <a href="offer.html">Оферта и оплата</a>
+      <a href="privacy.html">Конфиденциальность</a>
+      <a href="contacts.html">Контакты</a>
     </div>
   </div>
 </footer>
+
+<script>
+  // Оформление подписки: создаём платёж и уходим на страницу оплаты ЮKassa.
+  async function subscribe(plan) {
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: plan })
+      });
+
+      if (res.status === 401) { location.href = 'login.html'; return; }
+      if (res.status === 503) {
+        alert('Онлайн-оплата скоро заработает: магазин ЮKassa проходит модерацию. Тариф «Старт» доступен уже сейчас.');
+        return;
+      }
+      if (!res.ok) { alert('Не удалось создать платёж. Попробуйте позже.'); return; }
+
+      const data = await res.json();
+      if (data.confirmation_url) location.href = data.confirmation_url;
+    } catch (e) {
+      alert('Сеть недоступна. Попробуйте позже.');
+    }
+  }
+</script>
 
 </body>
 </html>

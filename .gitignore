@@ -2,11 +2,23 @@
 /bin/
 *.exe
 /server
+/gen-testdata
 
-# Env / secrets — НИКОГДА не коммитим
+# Env / secrets — НИКОГДА не коммитим.
+# Ловим по маске любые .env-варианты (.env.prod, .env.local и т.п.),
+# но оставляем шаблоны-примеры.
 .env
-.env.selfhosted
+.env.*
+!.env.example
+!.env.selfhosted.example
 *.local
+
+# Ключи и сертификаты
+*.pem
+*.key
+*.p12
+id_rsa*
+id_ed25519*
 
 # Go
 *.test
@@ -16,17 +28,19 @@ vendor/
 # IDE
 .idea/
 .vscode/
+.DS_Store
 
-# Data / uploads
+# Данные пользователей, выписки, загрузки
 /data/
 /uploads/
 *.db
 
+# Дампы и бэкапы БД — в них лежат персональные и платёжные данные
+backups/
+*.sql.gz
+*.dump
+*.bak
+
 # Личный трекер прогресса (Cowork artifact) — не коммитим
 finaudit_tracker.html
 *_tracker.html
-.DS_Store
-.DS_Store
-/gen-testdata
-/bin/
-backups/
