@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAudit — Пакетный анализ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#014ac6; --primary-container:#3265e0; --on-primary-container:#eeefff;
+    --surface:#faf8ff; --surface-bright:#faf8ff; --on-surface:#131b2e; --on-surface-variant:#434655;
+    --surface-container:#eaedff; --surface-container-low:#f2f3ff; --surface-variant:#dae2fc;
+    --outline:#737686; --outline-variant:#c3c6d7; --error-container:#ffdad6; --on-error-container:#93000a;
+    --brand-green:#16a34a; --brand-blue:#2563eb; --brand-red:#ef4444; --brand-amber:#f59e0b;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface); color:var(--on-surface); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  a{ text-decoration:none; color:inherit; } svg{ display:block; }
+
+  .layout{ display:flex; min-height:100vh; }
+  .sidebar{ width:256px; flex:none; background:var(--surface-container); position:fixed; top:0; left:0;
+    height:100vh; display:flex; flex-direction:column; padding:16px; z-index:50; }
+  .sidebar .brand{ padding:0 12px; margin-bottom:28px; }
+  .sidebar .brand h1{ font-size:22px; font-weight:700; color:var(--primary); }
+  .sidebar .brand p{ font-size:12px; color:var(--on-surface-variant); }
+  .nav{ display:flex; flex-direction:column; gap:8px; flex:1; }
+  .nav-link{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px;
+    color:var(--on-surface-variant); font-weight:500; transition:background .2s; }
+  .nav-link svg{ width:22px; height:22px; flex:none; }
+  .nav-link:hover{ background:var(--surface-variant); }
+  .nav-link.active{ background:var(--primary-container); color:var(--on-primary-container); }
+  .sidebar-foot{ margin-top:auto; padding-top:24px; border-top:1px solid rgba(115,118,134,.2); }
+
+  .main{ margin-left:256px; flex:1; min-width:0; }
+  .topbar{ position:sticky; top:0; z-index:40; height:64px; background:rgba(250,248,255,.8);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 1px 3px rgba(15,23,42,.05);
+    display:flex; align-items:center; justify-content:space-between; padding:0 40px; }
+  .topbar .title{ font-size:22px; font-weight:700; color:var(--primary); }
+  .topbar .hint{ font-size:14px; color:var(--on-surface-variant); }
+  .content{ padding:40px; max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:24px; }
+
+  .card{ background:rgba(255,255,255,.85); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 10px 25px -5px rgba(15,23,42,.05); padding:32px; }
+  .sec-title{ font-size:20px; font-weight:600; margin-bottom:16px; }
+
+  .upload{ display:grid; grid-template-columns:2fr 1fr; gap:32px; align-items:center; }
+  .dropzone{ border:2px dashed rgba(1,74,198,.3); background:var(--surface-container-low); border-radius:14px;
+    padding:40px; text-align:center; cursor:pointer; display:flex; flex-direction:column; align-items:center; transition:border-color .2s; }
+  .dropzone:hover{ border-color:var(--primary); }
+  .dropzone svg{ width:40px; height:40px; color:var(--primary); margin-bottom:16px; }
+  .dropzone .big{ font-size:18px; font-weight:600; } .dropzone .small{ font-size:14px; color:var(--on-surface-variant); margin-top:4px; }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:600; border-radius:12px;
+    cursor:pointer; border:1px solid transparent; padding:16px; width:100%; color:#fff; background:var(--brand-blue);
+    transition:transform .1s, filter .2s; } .btn svg{ width:20px; height:20px; }
+  .btn:hover{ filter:brightness(1.05); } .btn:active{ transform:scale(.97); } .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  #error{ color:var(--brand-red); font-weight:500; }
+  #results{ display:none; flex-direction:column; gap:24px; }
+
+  .banner{ border-radius:14px; padding:16px 20px; display:flex; align-items:flex-start; gap:12px; }
+  .banner svg{ width:22px; height:22px; flex:none; }
+  .banner-warn{ background:#fffbeb; border:1px solid #fde68a; color:#b45309; }
+
+  .groups{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+  .group{ border:1px solid var(--outline-variant); border-radius:14px; padding:20px; background:#fff; }
+  .group h4{ font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .group .row{ display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px; }
+  .group .row .pos{ color:var(--brand-green); } .group .row .neg{ color:var(--brand-red); }
+  .badge{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:12px; font-weight:700; }
+  .badge svg{ width:14px; height:14px; }
+  .badge-red{ background:#fee2e2; color:var(--brand-red); } .badge-green{ background:#dcfce7; color:var(--brand-green); }
+  .open-link{ display:inline-flex; align-items:center; gap:6px; margin-top:12px; color:var(--primary); font-weight:600; font-size:14px; }
+  .open-link svg{ width:18px; height:18px; }
+
+  .table-scroll{ width:100%; overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; text-align:left; min-width:600px; }
+  th{ padding:12px 16px; font-size:13px; color:var(--on-surface-variant); font-weight:600; background:var(--surface-container-low); }
+  td{ padding:12px 16px; border-top:1px solid var(--outline-variant); font-size:14px; }
+  .st-ok{ color:var(--brand-green); font-weight:600; } .st-failed{ color:var(--brand-red); font-weight:600; }
+  .muted{ color:var(--on-surface-variant); }
+
+  @media(max-width:900px){
+    .layout{ flex-direction:column; }
+    .sidebar{ position:static; width:100%; height:auto; flex-direction:row; align-items:center; padding:8px 12px; gap:6px; overflow-x:auto; }
+    .sidebar .brand{ margin:0 8px 0 4px; } .sidebar .brand p{ display:none; }
+    .nav{ flex-direction:row; gap:4px; flex:0 0 auto; } .nav-link span{ display:none; } .nav-link{ padding:10px; }
+    .sidebar-foot{ margin:0; padding:0; border:none; }
+    .main{ margin-left:0; } .topbar{ padding:0 16px; } .content{ padding:20px 16px; }
+    .card{ padding:20px; } .upload{ grid-template-columns:1fr; } .groups{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"><h1>FinAudit</h1><p>Финансовый аудит</p></div>
+    <nav class="nav">
+      <a class="nav-link" href="dashboard.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Дашборд</span></a>
+      <a class="nav-link" href="history.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>История</span></a>
+      <a class="nav-link" href="docs.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4s-8-1.79-8-4zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"/></svg><span>База</span></a>
+      <a class="nav-link active" href="batch.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg><span>Пакет</span></a>
+      <a class="nav-link" href="settings.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Настройки</span></a>
+    </nav>
+    <div class="sidebar-foot">
+      <a class="nav-link" href="index.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg><span>Выйти</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar"><span class="title">Пакетный анализ</span><span class="hint">Несколько выписок → один свод</span></header>
+    <div class="content">
+      <section class="card upload">
+        <label for="files" class="dropzone">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          <p class="big" id="filesLabel">Перетащите несколько выписок или выберите</p>
+          <p class="small">CSV, Excel, 1С — за разные периоды. Свяжем по счёту.</p>
+          <input type="file" id="files" accept=".csv,.xlsx,.txt,.pdf" multiple style="display:none">
+        </label>
+        <button id="analyzeBtn" class="btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>
+          Проанализировать пакет
+        </button>
+      </section>
+      <div id="error"></div>
+
+      <div id="results">
+        <div id="incompat"></div>
+        <div class="card">
+          <h3 class="sec-title">Своды по счетам</h3>
+          <div class="groups" id="groups"></div>
+        </div>
+        <div class="card">
+          <h3 class="sec-title">Файлы пакета</h3>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Файл</th><th>Счёт</th><th>Транзакций</th><th>Статус</th></tr></thead>
+              <tbody id="filesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// авто-выход на login при истёкшей сессии (вместо «не авторизован»)
+(() => { const _f = window.fetch; window.fetch = async (...a) => { const r = await _f(...a);
+  if (r.status === 401 && !location.pathname.endsWith('login.html')) location.replace('login.html'); return r; }; })();
+fetch('/api/me').catch(() => {});
+const IC = {
+  warn:'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z',
+  check:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+  eye:'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'
+};
+const ico = d => `<svg viewBox="0 0 24 24" fill="currentColor">${'<path d="'+d+'"/>'}</svg>`;
+const rub = n => Math.round(Number(n||0)).toLocaleString("ru-RU") + " ₽";
+const esc = s => String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const filesInput = document.getElementById("files");
+filesInput.addEventListener("change", () => {
+  const n = filesInput.files.length;
+  document.getElementById("filesLabel").textContent = n ? (n + " файл(ов) выбрано") : "Перетащите несколько выписок или выберите";
+});
+document.getElementById("analyzeBtn").onclick = analyzeBatch;
+
+async function analyzeBatch(){
+  const errEl = document.getElementById("error"); errEl.textContent = "";
+  const fs = filesInput.files;
+  if(!fs || fs.length === 0){ errEl.textContent = "Выберите файлы выписок."; return; }
+  const btn = document.getElementById("analyzeBtn");
+  btn.disabled = true; btn.textContent = "Анализирую пакет…";
+  try {
+    const fd = new FormData();
+    for(const f of fs){ fd.append("files", f); }
+    const resp = await fetch("/api/batches", { method:"POST", body:fd });
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok){ throw new Error(data.error || ("HTTP "+resp.status)); }
+    render(data);
+  } catch(e){
+    errEl.textContent = "Не удалось обработать пакет: " + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = ico('M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z') + ' Проанализировать пакет';
+  }
+}
+
+function render(data){
+  document.getElementById("results").style.display = "flex";
+
+  const inc = document.getElementById("incompat");
+  inc.innerHTML = (data.incompatible||[]).map(m =>
+    `<div class="banner banner-warn">${ico(IC.warn)}<span>${esc(m)}</span></div>`).join("");
+
+  document.getElementById("groups").innerHTML = (data.groups||[]).map(g => {
+    const acc = g.accountKey ? esc(g.accountKey) : "без счёта";
+    const gapBadge = g.hasGap
+      ? `<span class="badge badge-red">${ico(IC.warn)}Разрыв</span>`
+      : `<span class="badge badge-green">${ico(IC.check)}Без разрыва</span>`;
+    return `<div class="group">
+      <h4>Счёт ${acc} ${gapBadge}</h4>
+      <div class="row"><span class="muted">Файлов в своде</span><span>${g.fileCount}</span></div>
+      <div class="row"><span class="muted">Доходы</span><span class="pos">+${rub(g.income)}</span></div>
+      <div class="row"><span class="muted">Расходы</span><span class="neg">−${rub(g.expense)}</span></div>
+      <a class="open-link" href="dashboard.html?upload=${g.uploadId}">${ico(IC.eye)}Открыть свод</a>
+    </div>`;
+  }).join("") || '<p class="muted">Нет сведённых групп.</p>';
+
+  document.getElementById("filesBody").innerHTML = (data.files||[]).map(f => {
+    const acc = f.accountKey ? esc(f.accountKey) : '<span class="muted">не определён</span>';
+    const st = f.status === "ok"
+      ? '<span class="st-ok">распознан</span>'
+      : `<span class="st-failed">${esc(f.note || "ошибка")}</span>`;
+    return `<tr><td>${esc(f.filename)}</td><td>${acc}</td><td>${f.txCount}</td><td>${st}</td></tr>`;
+  }).join("");
+}
+</script>
+</body>
+</html>

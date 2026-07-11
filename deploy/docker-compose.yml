@@ -1,0 +1,74 @@
+services:
+  app:
+    image: ghcr.io/howtoplay27/finaudit:v1.0.0
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-dev}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+    env_file: ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - ../testdata:/testdata
+      - uploads_data:/data/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  postgres:
+    image: postgres:16-alpine
+    env_file: ../.env
+    environment:
+      POSTGRES_USER: finaudit
+      POSTGRES_DB: finaudit
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finaudit -d finaudit || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24-alpine
+    environment:
+      CLICKHOUSE_DB: finaudit
+    volumes:
+      - chdata:/var/lib/clickhouse
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddydata:/data
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+  pgdata:
+  chdata:
+  caddydata:
+
+networks:
+  caddy_network:
+    external: true
+    name: caddy_network

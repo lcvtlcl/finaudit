@@ -1,0 +1,24 @@
+# Локальный запуск: скопируй .env.example в .env и заполни значения.
+# Секреты в этот файл НЕ вписываем — они берутся из .env.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: finaudit-postgres
+    env_file: .env
+    environment:
+      POSTGRES_USER: finaudit
+      POSTGRES_DB: finaudit
+    volumes:
+      - finaudit_pgdata:/var/lib/postgresql/data
+
+  app:
+    image: ghcr.io/howtoplay27/finaudit:v1.0.0
+    container_name: finaudit
+    ports:
+      - "8000:8080"
+    env_file: .env
+    depends_on:
+      - postgres
+
+volumes:
+  finaudit_pgdata:

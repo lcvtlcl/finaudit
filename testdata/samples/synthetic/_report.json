@@ -1,0 +1,243 @@
+[
+  {
+    "file": "retail_ip_Q1_bank_semicolon.csv",
+    "biz": "Розница-ИП (магазин одежды), УСН 6%",
+    "fmt": "csv_bank_semi",
+    "period": "Q1",
+    "start": "2025-01-01",
+    "end": "2025-03-31",
+    "n": 95,
+    "gap_flag": false,
+    "min_bal": 208027.0,
+    "gap_days": []
+  },
+  {
+    "file": "services_ooo_Q1_bank_semicolon.csv",
+    "biz": "Услуги-ООО (IT/маркетинг агентство), УСН 15%",
+    "fmt": "csv_bank_semi",
+    "period": "Q1",
+    "start": "2025-01-01",
+    "end": "2025-03-31",
+    "n": 52,
+    "gap_flag": true,
+    "min_bal": -61467.0,
+    "gap_days": [
+      "2025-02-20"
+    ]
+  },
+  {
+    "file": "ecommerce_Q1_bank_semicolon.csv",
+    "biz": "E-commerce / маркетплейсы (WB/Ozon/Яндекс), УСН",
+    "fmt": "csv_bank_semi",
+    "period": "Q1",
+    "start": "2025-01-01",
+    "end": "2025-03-31",
+    "n": 79,
+    "gap_flag": true,
+    "min_bal": 831231.0,
+    "gap_days": []
+  },
+  {
+    "file": "cafe_Q1_bank_semicolon.csv",
+    "biz": "Кафе / общепит, УСН",
+    "fmt": "csv_bank_semi",
+    "period": "Q1",
+    "start": "2025-01-01",
+    "end": "2025-03-31",
+    "n": 178,
+    "gap_flag": false,
+    "min_bal": -16853.0,
+    "gap_days": [
+      "2025-01-10",
+      "2025-01-15"
+    ]
+  },
+  {
+    "file": "retail_ip_Q2_legacy_semicolon.csv",
+    "biz": "Розница-ИП (магазин одежды), УСН 6%",
+    "fmt": "csv_legacy_semi",
+    "period": "Q2",
+    "start": "2025-04-01",
+    "end": "2025-06-30",
+    "n": 99,
+    "gap_flag": true,
+    "min_bal": 58628.0,
+    "gap_days": []
+  },
+  {
+    "file": "cafe_Q2_legacy_semicolon.csv",
+    "biz": "Кафе / общепит, УСН",
+    "fmt": "csv_legacy_semi",
+    "period": "Q2",
+    "start": "2025-04-01",
+    "end": "2025-06-30",
+    "n": 179,
+    "gap_flag": false,
+    "min_bal": -62171.0,
+    "gap_days": [
+      "2025-05-02",
+      "2025-05-28",
+      "2025-06-02",
+      "2025-06-03",
+      "2025-06-04",
+      "2025-06-05",
+      "2025-06-06",
+      "2025-06-10",
+      "2025-06-11"
+    ]
+  },
+  {
+    "file": "services_ooo_Q2_legacy_comma.csv",
+    "biz": "Услуги-ООО (IT/маркетинг агентство), УСН 15%",
+    "fmt": "csv_legacy_comma",
+    "period": "Q2",
+    "start": "2025-04-01",
+    "end": "2025-06-30",
+    "n": 49,
+    "gap_flag": false,
+    "min_bal": 120000.0,
+    "gap_days": []
+  },
+  {
+    "file": "ecommerce_Q2_bank_comma.csv",
+    "biz": "E-commerce / маркетплейсы (WB/Ozon/Яндекс), УСН",
+    "fmt": "csv_bank_comma",
+    "period": "Q2",
+    "start": "2025-04-01",
+    "end": "2025-06-30",
+    "n": 79,
+    "gap_flag": true,
+    "min_bal": -297911.0,
+    "gap_days": [
+      "2025-04-06"
+    ]
+  },
+  {
+    "file": "retail_ip_Q3_1c.txt",
+    "biz": "Розница-ИП (магазин одежды), УСН 6%",
+    "fmt": "clientbank",
+    "period": "Q3",
+    "start": "2025-07-01",
+    "end": "2025-09-30",
+    "n": 97,
+    "gap_flag": false,
+    "min_bal": 269164.0,
+    "gap_days": []
+  },
+  {
+    "file": "services_ooo_Q3_1c.txt",
+    "biz": "Услуги-ООО (IT/маркетинг агентство), УСН 15%",
+    "fmt": "clientbank",
+    "period": "Q3",
+    "start": "2025-07-01",
+    "end": "2025-09-30",
+    "n": 52,
+    "gap_flag": true,
+    "min_bal": -181603.0,
+    "gap_days": [
+      "2025-08-20"
+    ]
+  },
+  {
+    "file": "ecommerce_Q3_1c.txt",
+    "biz": "E-commerce / маркетплейсы (WB/Ozon/Яндекс), УСН",
+    "fmt": "clientbank",
+    "period": "Q3",
+    "start": "2025-07-01",
+    "end": "2025-09-30",
+    "n": 76,
+    "gap_flag": false,
+    "min_bal": -390489.0,
+    "gap_days": [
+      "2025-07-06"
+    ]
+  },
+  {
+    "file": "cafe_Q3_1c.txt",
+    "biz": "Кафе / общепит, УСН",
+    "fmt": "clientbank",
+    "period": "Q3",
+    "start": "2025-07-01",
+    "end": "2025-09-30",
+    "n": 183,
+    "gap_flag": true,
+    "min_bal": -14392.0,
+    "gap_days": [
+      "2025-08-20"
+    ]
+  },
+  {
+    "file": "retail_ip_Q4.xlsx",
+    "biz": "Розница-ИП (магазин одежды), УСН 6%",
+    "fmt": "xlsx",
+    "period": "Q4",
+    "start": "2025-10-01",
+    "end": "2025-12-31",
+    "n": 100,
+    "gap_flag": true,
+    "min_bal": -76432.0,
+    "gap_days": [
+      "2025-11-20"
+    ]
+  },
+  {
+    "file": "services_ooo_Q4.xlsx",
+    "biz": "Услуги-ООО (IT/маркетинг агентство), УСН 15%",
+    "fmt": "xlsx",
+    "period": "Q4",
+    "start": "2025-10-01",
+    "end": "2025-12-31",
+    "n": 49,
+    "gap_flag": false,
+    "min_bal": 120000.0,
+    "gap_days": []
+  },
+  {
+    "file": "ecommerce_Q4.xlsx",
+    "biz": "E-commerce / маркетплейсы (WB/Ozon/Яндекс), УСН",
+    "fmt": "xlsx",
+    "period": "Q4",
+    "start": "2025-10-01",
+    "end": "2025-12-31",
+    "n": 76,
+    "gap_flag": false,
+    "min_bal": 526096.0,
+    "gap_days": []
+  },
+  {
+    "file": "cafe_Q4.xlsx",
+    "biz": "Кафе / общепит, УСН",
+    "fmt": "xlsx",
+    "period": "Q4",
+    "start": "2025-10-01",
+    "end": "2025-12-31",
+    "n": 181,
+    "gap_flag": false,
+    "min_bal": 78183.0,
+    "gap_days": []
+  },
+  {
+    "file": "retail_ip_Q1_1c.txt",
+    "biz": "Розница-ИП (магазин одежды), УСН 6%",
+    "fmt": "clientbank",
+    "period": "Q1",
+    "start": "2025-01-01",
+    "end": "2025-03-31",
+    "n": 95,
+    "gap_flag": false,
+    "min_bal": 228276.0,
+    "gap_days": []
+  },
+  {
+    "file": "cafe_Q1_bank_comma.csv",
+    "biz": "Кафе / общепит, УСН",
+    "fmt": "csv_bank_comma",
+    "period": "Q1",
+    "start": "2025-01-01",
+    "end": "2025-03-31",
+    "n": 178,
+    "gap_flag": false,
+    "min_bal": 54488.0,
+    "gap_days": []
+  }
+]

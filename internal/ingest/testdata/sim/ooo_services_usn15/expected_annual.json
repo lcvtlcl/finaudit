@@ -1,0 +1,35 @@
+{
+  "persona": "ooo_services_usn15",
+  "year": 2026,
+  "total_income": 11053074.98,
+  "total_expense": 10421461.24,
+  "net_cash_flow": 631613.74,
+  "quarters": [
+    {
+      "quarter": 1,
+      "income": 2846699.09,
+      "expense": 1989000,
+      "net": 857699.09
+    },
+    {
+      "quarter": 2,
+      "income": 2074121.36,
+      "expense": 2416004.86,
+      "net": -341883.5
+    },
+    {
+      "quarter": 3,
+      "income": 4092305.17,
+      "expense": 3250118.2,
+      "net": 842186.97
+    },
+    {
+      "quarter": 4,
+      "income": 2039949.36,
+      "expense": 2766338.18,
+      "net": -726388.82
+    }
+  ],
+  "has_cash_gap": true,
+  "cash_gap_reason": "совпали крупные списания: «Платёж по кредиту, договор №778» (55000 ₽)"
+}

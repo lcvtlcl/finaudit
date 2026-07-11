@@ -1,0 +1,35 @@
+{
+  "persona": "ecom_marketplace",
+  "year": 2026,
+  "total_income": 9385937.02,
+  "total_expense": 5346038.6,
+  "net_cash_flow": 4039898.42,
+  "quarters": [
+    {
+      "quarter": 1,
+      "income": 1539762.17,
+      "expense": 1199924.61,
+      "net": 339837.56
+    },
+    {
+      "quarter": 2,
+      "income": 2330186.07,
+      "expense": 1393165.11,
+      "net": 937020.96
+    },
+    {
+      "quarter": 3,
+      "income": 2157845.1,
+      "expense": 1279195.93,
+      "net": 878649.17
+    },
+    {
+      "quarter": 4,
+      "income": 3358143.68,
+      "expense": 1473752.95,
+      "net": 1884390.73
+    }
+  ],
+  "has_cash_gap": true,
+  "cash_gap_reason": "совпали крупные списания: «Оплата производства партии товара» (236093 ₽) и «Аренда склада» (40000 ₽)"
+}

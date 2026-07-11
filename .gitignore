@@ -1,0 +1,32 @@
+# Binaries
+/bin/
+*.exe
+/server
+
+# Env / secrets — НИКОГДА не коммитим
+.env
+.env.selfhosted
+*.local
+
+# Go
+*.test
+*.out
+vendor/
+
+# IDE
+.idea/
+.vscode/
+
+# Data / uploads
+/data/
+/uploads/
+*.db
+
+# Личный трекер прогресса (Cowork artifact) — не коммитим
+finaudit_tracker.html
+*_tracker.html
+.DS_Store
+.DS_Store
+/gen-testdata
+/bin/
+backups/

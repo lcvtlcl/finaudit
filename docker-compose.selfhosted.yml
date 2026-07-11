@@ -1,0 +1,40 @@
+# Self-hosted: скопируй .env.selfhosted.example в .env.selfhosted и заполни значения.
+# Секреты в этот файл НЕ вписываем — они берутся из .env.selfhosted.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: finaudit-postgres
+    restart: unless-stopped
+    env_file:
+      - .env.selfhosted
+    environment:
+      POSTGRES_USER: finaudit
+      POSTGRES_DB: finaudit
+    volumes:
+      - finaudit_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finaudit -d finaudit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  finaudit:
+    image: ghcr.io/howtoplay27/finaudit:v1.0.0
+    container_name: finaudit
+    restart: unless-stopped
+    ports:
+      - "8000:8080"
+    env_file:
+      - .env.selfhosted
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - caddy_network
+
+volumes:
+  finaudit_pgdata:
+
+networks:
+  caddy_network:
+    external: true

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAudit — База документов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#014ac6; --primary-container:#3265e0; --on-primary-container:#eeefff;
+    --surface:#faf8ff; --surface-bright:#faf8ff; --on-surface:#131b2e; --on-surface-variant:#434655;
+    --surface-container:#eaedff; --surface-container-low:#f2f3ff; --surface-variant:#dae2fc;
+    --outline:#737686; --outline-variant:#c3c6d7; --brand-green:#16a34a; --brand-blue:#2563eb; --brand-red:#ef4444;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface); color:var(--on-surface); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  a{ text-decoration:none; color:inherit; } svg{ display:block; }
+
+  .layout{ display:flex; min-height:100vh; }
+  .sidebar{ width:256px; flex:none; background:var(--surface-container); position:fixed; top:0; left:0;
+    height:100vh; display:flex; flex-direction:column; padding:16px; z-index:50; }
+  .sidebar .brand{ padding:0 12px; margin-bottom:28px; }
+  .sidebar .brand h1{ font-size:22px; font-weight:700; color:var(--primary); }
+  .sidebar .brand p{ font-size:12px; color:var(--on-surface-variant); }
+  .nav{ display:flex; flex-direction:column; gap:8px; flex:1; }
+  .nav-link{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px;
+    color:var(--on-surface-variant); font-weight:500; transition:background .2s; }
+  .nav-link svg{ width:22px; height:22px; flex:none; }
+  .nav-link:hover{ background:var(--surface-variant); }
+  .nav-link.active{ background:var(--primary-container); color:var(--on-primary-container); }
+  .sidebar-foot{ margin-top:auto; padding-top:24px; border-top:1px solid rgba(115,118,134,.2); }
+
+  .main{ margin-left:256px; flex:1; min-width:0; }
+  .topbar{ position:sticky; top:0; z-index:40; height:64px; background:rgba(250,248,255,.8);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 1px 3px rgba(15,23,42,.05);
+    display:flex; align-items:center; justify-content:space-between; padding:0 40px; }
+  .topbar .title{ font-size:22px; font-weight:700; color:var(--primary); }
+  .topbar .hint{ font-size:14px; color:var(--on-surface-variant); }
+  .content{ padding:40px; max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:24px; }
+
+  .card{ background:rgba(255,255,255,.85); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 10px 25px -5px rgba(15,23,42,.05); padding:32px; }
+  .sec-title{ font-size:20px; font-weight:600; margin-bottom:16px; }
+
+  .upload{ display:grid; grid-template-columns:2fr 1fr; gap:32px; align-items:center; }
+  .dropzone{ border:2px dashed rgba(1,74,198,.3); background:var(--surface-container-low); border-radius:14px;
+    padding:40px; text-align:center; cursor:pointer; display:flex; flex-direction:column; align-items:center; transition:border-color .2s; }
+  .dropzone:hover{ border-color:var(--primary); }
+  .dropzone svg{ width:40px; height:40px; color:var(--primary); margin-bottom:16px; }
+  .dropzone .big{ font-size:18px; font-weight:600; } .dropzone .small{ font-size:14px; color:var(--on-surface-variant); margin-top:4px; }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:600; border-radius:12px;
+    cursor:pointer; border:1px solid transparent; padding:16px; width:100%; color:#fff; background:var(--brand-blue);
+    transition:transform .1s, filter .2s; } .btn svg{ width:20px; height:20px; }
+  .btn:hover{ filter:brightness(1.05); } .btn:active{ transform:scale(.97); } .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  #error{ color:var(--brand-red); font-weight:500; }
+  .table-scroll{ width:100%; overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; text-align:left; min-width:640px; }
+  th{ padding:14px 20px; font-size:13px; color:var(--on-surface-variant); font-weight:600; background:var(--surface-container-low); }
+  td{ padding:14px 20px; border-top:1px solid var(--outline-variant); font-size:14px; vertical-align:middle; }
+  .fname{ font-weight:600; } .muted{ color:var(--on-surface-variant); }
+  .badge{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:12px; font-weight:700; }
+  .badge svg{ width:13px; height:13px; }
+  .badge-green{ background:#dcfce7; color:var(--brand-green); } .badge-gray{ background:#eef2f7; color:var(--on-surface-variant); }
+  .act{ display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:9px; font-size:13px; font-weight:600;
+    border:1px solid var(--outline-variant); background:#fff; cursor:pointer; color:var(--primary); font-family:inherit; }
+  .act:hover{ background:var(--surface-variant); }
+  .act svg{ width:16px; height:16px; }
+  .act.del{ color:var(--brand-red); border-color:#fecaca; }
+  .actions{ display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+  #empty{ color:var(--on-surface-variant); padding:8px 0; }
+
+  @media(max-width:900px){
+    .layout{ flex-direction:column; }
+    .sidebar{ position:static; width:100%; height:auto; flex-direction:row; align-items:center; padding:8px 12px; gap:6px; overflow-x:auto; }
+    .sidebar .brand{ margin:0 8px 0 4px; } .sidebar .brand p{ display:none; }
+    .nav{ flex-direction:row; gap:4px; flex:0 0 auto; } .nav-link span{ display:none; } .nav-link{ padding:10px; }
+    .sidebar-foot{ margin:0; padding:0; border:none; }
+    .main{ margin-left:0; } .topbar{ padding:0 16px; } .content{ padding:20px 16px; }
+    .card{ padding:20px; } .upload{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"><h1>FinAudit</h1><p>Финансовый аудит</p></div>
+    <nav class="nav">
+      <a class="nav-link" href="dashboard.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Дашборд</span></a>
+      <a class="nav-link" href="history.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>История</span></a>
+      <a class="nav-link active" href="docs.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4s-8-1.79-8-4zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"/></svg><span>База</span></a>
+      <a class="nav-link" href="batch.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg><span>Пакет</span></a>
+      <a class="nav-link" href="settings.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Настройки</span></a>
+    </nav>
+    <div class="sidebar-foot">
+      <a class="nav-link" href="index.html"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg><span>Выйти</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar"><span class="title">База документов</span><span class="hint">Храните выписки — анализируйте когда нужно</span></header>
+    <div class="content">
+      <section class="card upload">
+        <label for="files" class="dropzone">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          <p class="big" id="filesLabel">Перетащите документы или выберите</p>
+          <p class="small">CSV, Excel, 1С — сохраним, анализ запустите позже.</p>
+          <input type="file" id="files" accept=".csv,.xlsx,.txt,.pdf" multiple style="display:none">
+        </label>
+        <button id="saveBtn" class="btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+          Сохранить в базу
+        </button>
+      </section>
+      <div id="error"></div>
+
+      <div class="card">
+        <h3 class="sec-title">Мои документы</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Файл</th><th>Размер</th><th>Загружен</th><th>Статус</th><th style="text-align:right">Действия</th></tr></thead>
+            <tbody id="docsBody"></tbody>
+          </table>
+        </div>
+        <p id="empty" style="display:none">Пока нет сохранённых документов.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// авто-выход на login при истёкшей сессии (вместо «не авторизован»)
+(() => { const _f = window.fetch; window.fetch = async (...a) => { const r = await _f(...a);
+  if (r.status === 401 && !location.pathname.endsWith('login.html')) location.replace('login.html'); return r; }; })();
+fetch('/api/me').catch(() => {});
+const IC = {
+  play:'M8 5v14l11-7z',
+  eye:'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+  trash:'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
+  check:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'
+};
+const ico = d => `<svg viewBox="0 0 24 24" fill="currentColor"><path d="${d}"/></svg>`;
+const esc = s => String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const kb = n => Math.max(1, Math.round(Number(n||0)/1024)) + " КБ";
+const fmtDate = s => { const d = new Date(s); return d.toLocaleDateString("ru-RU") + " " + d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}); };
+
+const filesInput = document.getElementById("files");
+filesInput.addEventListener("change", () => {
+  const n = filesInput.files.length;
+  document.getElementById("filesLabel").textContent = n ? (n + " файл(ов) выбрано") : "Перетащите документы или выберите";
+});
+document.getElementById("saveBtn").onclick = saveDocs;
+
+async function saveDocs(){
+  const errEl = document.getElementById("error"); errEl.textContent = "";
+  const fs = filesInput.files;
+  if(!fs || fs.length === 0){ errEl.textContent = "Выберите файлы."; return; }
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true; btn.textContent = "Сохраняю…";
+  try {
+    const fd = new FormData();
+    for(const f of fs){ fd.append("files", f); }
+    const resp = await fetch("/api/documents", { method:"POST", body:fd });
+    if(!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.error || ("HTTP "+resp.status)); }
+    filesInput.value = "";
+    document.getElementById("filesLabel").textContent = "Перетащите документы или выберите";
+    render(await resp.json());
+  } catch(e){ errEl.textContent = "Не удалось сохранить: " + e.message; }
+  finally { btn.disabled = false; btn.innerHTML = ico('M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z') + ' Сохранить в базу'; }
+}
+
+function row(d){
+  const analyzed = d.lastUploadId
+    ? `<span class="badge badge-green">${ico(IC.check)}проанализирован</span>`
+    : `<span class="badge badge-gray">не анализировался</span>`;
+  const openBtn = d.lastUploadId
+    ? `<a class="act" href="dashboard.html?upload=${d.lastUploadId}" title="Открыть результат">${ico(IC.eye)}Открыть</a>` : "";
+  return `<tr>
+    <td class="fname">${esc(d.filename)}</td>
+    <td class="muted">${kb(d.sizeBytes)}</td>
+    <td class="muted">${fmtDate(d.uploadedAt)}</td>
+    <td>${analyzed}</td>
+    <td><div class="actions">
+      <button class="act" data-analyze="${d.id}" title="Анализировать">${ico(IC.play)}Анализировать</button>
+      ${openBtn}
+      <button class="act del" data-del="${d.id}" title="Удалить">${ico(IC.trash)}</button>
+    </div></td>
+  </tr>`;
+}
+
+function render(docs){
+  const body = document.getElementById("docsBody");
+  const empty = document.getElementById("empty");
+  if(!Array.isArray(docs) || docs.length === 0){
+    body.innerHTML = ""; empty.style.display = "block"; return;
+  }
+  empty.style.display = "none";
+  body.innerHTML = docs.map(row).join("");
+  body.querySelectorAll("[data-analyze]").forEach(b => b.onclick = () => analyzeDoc(b.getAttribute("data-analyze"), b));
+  body.querySelectorAll("[data-del]").forEach(b => b.onclick = () => deleteDoc(b.getAttribute("data-del")));
+}
+
+async function analyzeDoc(id, btn){
+  document.getElementById("error").textContent = "";
+  const old = btn.innerHTML; btn.disabled = true; btn.textContent = "Анализирую…";
+  try {
+    const resp = await fetch("/api/documents/" + id + "/analyze", { method:"POST" });
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok){ throw new Error(data.error || ("HTTP "+resp.status)); }
+    window.location.href = "dashboard.html?upload=" + data.uploadId;
+  } catch(e){
+    document.getElementById("error").textContent = "Не удалось проанализировать: " + e.message;
+    btn.disabled = false; btn.innerHTML = old;
+  }
+}
+
+async function deleteDoc(id){
+  if(!confirm("Удалить документ из базы?")){ return; }
+  try {
+    const resp = await fetch("/api/documents/" + id, { method:"DELETE" });
+    if(!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.error || ("HTTP "+resp.status)); }
+    load();
+  } catch(e){ document.getElementById("error").textContent = "Не удалось удалить: " + e.message; }
+}
+
+async function load(){
+  try {
+    const resp = await fetch("/api/documents");
+    if(!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.error || ("HTTP "+resp.status)); }
+    render(await resp.json());
+  } catch(e){ document.getElementById("error").textContent = "Не удалось загрузить базу: " + e.message; }
+}
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAudit — Дашборд</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#014ac6; --primary-container:#3265e0; --on-primary-container:#eeefff;
+    --surface:#faf8ff; --on-surface:#131b2e; --on-surface-variant:#434655;
+    --surface-container:#eaedff; --surface-container-low:#f2f3ff; --surface-variant:#dae2fc;
+    --outline:#737686; --outline-variant:#c3c6d7;
+    --error-container:#ffdad6; --on-error-container:#93000a;
+    --brand-green:#16a34a; --brand-blue:#2563eb; --brand-red:#ef4444; --brand-amber:#f59e0b;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface); color:var(--on-surface); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  a{ text-decoration:none; color:inherit; }
+  svg{ display:block; }
+
+  .layout{ display:flex; min-height:100vh; }
+  .sidebar{ width:256px; flex:none; background:var(--surface-container); position:fixed; top:0; left:0;
+    height:100vh; display:flex; flex-direction:column; padding:16px; z-index:50; }
+  .sidebar .brand{ padding:0 12px; margin-bottom:28px; }
+  .sidebar .brand h1{ font-size:22px; font-weight:700; color:var(--primary); }
+  .sidebar .brand p{ font-size:12px; color:var(--on-surface-variant); }
+  .nav{ display:flex; flex-direction:column; gap:8px; flex:1; }
+  .nav-link{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px;
+    color:var(--on-surface-variant); font-weight:500; transition:background .2s; }
+  .nav-link svg{ width:22px; height:22px; flex:none; }
+  .nav-link:hover{ background:var(--surface-variant); }
+  .nav-link.active{ background:var(--primary-container); color:var(--on-primary-container); }
+  .sidebar-foot{ margin-top:auto; padding-top:24px; border-top:1px solid rgba(115,118,134,.2); }
+
+  .main{ margin-left:256px; flex:1; min-width:0; }
+  .topbar{ position:sticky; top:0; z-index:40; height:64px; background:rgba(250,248,255,.8);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 1px 3px rgba(15,23,42,.05);
+    display:flex; align-items:center; justify-content:space-between; padding:0 40px; }
+  .topbar .title{ font-size:22px; font-weight:700; color:var(--primary); }
+  .topbar .hint{ font-size:14px; color:var(--on-surface-variant); }
+  .content{ padding:40px; max-width:1200px; margin:0 auto; display:flex; flex-direction:column; gap:32px; }
+
+  .card{ background:rgba(255,255,255,.85); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 10px 25px -5px rgba(15,23,42,.05); padding:32px; }
+
+  .upload{ display:grid; grid-template-columns:2fr 1fr; gap:32px; align-items:center; }
+  .dropzone{ border:2px dashed rgba(1,74,198,.3); background:var(--surface-container-low); border-radius:14px;
+    padding:40px; text-align:center; cursor:pointer; display:flex; flex-direction:column; align-items:center; transition:border-color .2s; }
+  .dropzone:hover{ border-color:var(--primary); }
+  .dropzone svg{ width:40px; height:40px; color:var(--primary); margin-bottom:16px; }
+  .dropzone .big{ font-size:18px; font-weight:600; }
+  .dropzone .small{ font-size:14px; color:var(--on-surface-variant); margin-top:4px; }
+  .upload-actions{ display:flex; flex-direction:column; gap:12px; }
+
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:600;
+    border-radius:12px; cursor:pointer; border:1px solid transparent; padding:16px; width:100%;
+    color:#fff; transition:transform .1s ease, filter .2s ease; }
+  .btn svg{ width:20px; height:20px; }
+  .btn:active{ transform:scale(.97); }
+  .btn:hover{ filter:brightness(1.05); }
+  .btn-blue{ background:var(--brand-blue); }
+  .btn-green{ background:var(--brand-green); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; filter:none; }
+
+  #error{ color:var(--brand-red); font-weight:500; }
+  #results{ display:none; flex-direction:column; gap:32px; }
+
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:24px; }
+  .kpi{ padding:24px; border-left:4px solid var(--brand-blue); }
+  .kpi.green{ border-left-color:var(--brand-green); }
+  .kpi.red{ border-left-color:var(--brand-red); }
+  .kpi.amber{ border-left-color:var(--brand-amber); }
+  .kpi .label{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--on-surface-variant); margin-bottom:8px; }
+  .value{ font-size:24px; font-weight:700; }
+  .value.pos{ color:var(--brand-green); } .value.neg{ color:var(--brand-red); } .value.blue{ color:var(--brand-blue); }
+
+  .rfac{ display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:600; }
+  .rfac.good{ background:#dcfce7; color:var(--brand-green); }
+  .rfac.bad{ background:#fee2e2; color:var(--brand-red); }
+  .field-sm{ width:100%; min-width:110px; padding:6px 8px; border:1px solid var(--outline-variant); border-radius:8px; font-family:inherit; font-size:13px; background:#fff; outline:none; }
+  .field-sm:focus{ border-color:var(--primary); }
+  .table-scroll{ width:100%; overflow-x:auto; }
+  #editArea table{ width:100%; border-collapse:collapse; min-width:720px; }
+  #editArea th{ text-align:left; padding:8px 10px; font-size:12px; color:var(--on-surface-variant); background:var(--surface-container-low); }
+  #editArea td{ padding:8px 10px; border-top:1px solid var(--outline-variant); font-size:13px; vertical-align:middle; }
+  .rating-badge{ width:96px; height:96px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; flex:none; color:#fff; }
+  .rating-badge .g{ font-size:36px; font-weight:800; line-height:1; }
+  .rating-badge .s{ font-size:13px; opacity:.9; }
+
+  .banner{ border-radius:16px; padding:24px; display:flex; align-items:flex-start; gap:16px; box-shadow:0 4px 10px -4px rgba(15,23,42,.08); }
+  .banner svg{ width:30px; height:30px; flex:none; }
+  .banner-error{ background:var(--error-container); color:var(--on-error-container); }
+  .banner-ok{ background:rgba(34,197,94,.12); border:1px solid var(--brand-green); color:var(--brand-green); align-items:center; font-weight:600; }
+  .banner h4{ font-size:18px; font-weight:700; }
+
+  .mgmt-light{ width:16px; height:16px; border-radius:50%; display:inline-block; flex:none; box-shadow:0 0 0 4px rgba(0,0,0,.04); }
+  .mgmt-verdict{ font-size:16px; font-weight:600; margin-bottom:18px; line-height:1.45; }
+  .mgmt-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .mgmt-grid .l{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--on-surface-variant); margin-bottom:4px; }
+  .mgmt-grid .v{ font-size:20px; font-weight:700; }
+  .mgmt-risk{ display:flex; gap:8px; align-items:flex-start; padding:8px 0; border-top:1px solid var(--outline-variant); font-size:14px; }
+  .mgmt-risk-title{ font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--on-surface-variant); margin:16px 0 2px; }
+  @media(max-width:560px){ .mgmt-grid{ grid-template-columns:1fr; } }
+
+  .sec-title{ font-size:20px; font-weight:600; margin-bottom:16px; }
+  .sec-title .sub{ font-size:14px; font-weight:400; color:var(--on-surface-variant); }
+  .chart-box{ position:relative; height:340px; }
+  .chart-box-sm{ position:relative; height:240px; }
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+
+  .recurring-list{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:16px; }
+  .rec-item2{ display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--surface-container-low); border-radius:10px; font-size:13px; }
+  .rec-item2 .amt{ margin-left:auto; font-weight:600; white-space:nowrap; }
+  .rec-item2 .out{ color:var(--brand-red); } .rec-item2 .in{ color:var(--brand-green); }
+
+  .checks-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .check{ background:var(--surface-container-low); border-radius:12px; padding:12px; }
+  .check-head{ display:flex; align-items:center; gap:8px; }
+  .check-head svg{ width:20px; height:20px; flex:none; }
+  .check-title{ font-weight:600; font-size:14px; }
+  .check-detail{ font-size:12px; color:var(--on-surface-variant); margin-top:4px; margin-left:28px; }
+  .check-rec{ font-size:12px; color:var(--brand-blue); margin-top:4px; margin-left:28px; }
+  .text-green{ color:var(--brand-green); } .text-amber{ color:var(--brand-amber); } .text-red{ color:var(--brand-red); }
+
+  .concl-head{ display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .concl-head svg{ width:24px; height:24px; color:var(--primary); flex:none; }
+  .concl-head h3{ font-size:20px; font-weight:600; }
+  #summary{ color:var(--on-surface-variant); line-height:1.6; margin-bottom:16px; }
+  .recs{ list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .rec-item{ display:flex; gap:8px; color:var(--on-surface-variant); }
+  .rec-item .arrow{ color:var(--brand-blue); }
+
+  .spinner{ display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,.5);
+    border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .analyzing{ display:none; }
+  .analyzing.on{ display:block; }
+  .analyzing .progress{ height:6px; background:var(--surface-variant); border-radius:99px; overflow:hidden; position:relative; }
+  .analyzing .progress > span{ position:absolute; top:0; height:100%; width:40%; border-radius:99px;
+    background:linear-gradient(90deg,var(--brand-blue),#60a5fa); animation:indet 1.1s ease-in-out infinite; }
+  @keyframes indet{ 0%{ left:-40%; } 100%{ left:100%; } }
+  .analyzing .steps{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .analyzing .step{ font-size:12px; color:var(--on-surface-variant); background:var(--surface-container-low); padding:6px 10px; border-radius:99px; transition:color .2s; }
+  .analyzing .step.act{ color:var(--brand-blue); font-weight:600; animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+
+  @media(max-width:900px){
+    .layout{ flex-direction:column; }
+    .sidebar{ position:static; width:100%; height:auto; flex-direction:row; align-items:center; padding:8px 12px; gap:6px; overflow-x:auto; }
+    .sidebar .brand{ margin:0 8px 0 4px; }
+    .sidebar .brand p{ display:none; }
+    .nav{ flex-direction:row; gap:4px; flex:0 0 auto; }
+    .nav-link span{ display:none; }
+    .nav-link{ padding:10px; }
+    .sidebar-foot{ margin:0; padding:0; border:none; }
+    .main{ margin-left:0; }
+    .topbar{ padding:0 16px; }
+    .topbar .hint{ display:none; }
+    .content{ padding:20px 16px; gap:24px; }
+    .card{ padding:20px; }
+    .kpi-grid{ grid-template-columns:1fr 1fr; }
+    .upload{ grid-template-columns:1fr; }
+    .two-col{ grid-template-columns:1fr; }
+    .checks-grid{ grid-template-columns:1fr 1fr; }
+  }
+  @media(max-width:560px){
+    .kpi-grid{ grid-template-columns:1fr; }
+    .checks-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"><h1>FinAudit</h1><p>Финансовый аудит</p></div>
+    <nav class="nav">
+      <a class="nav-link active" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Дашборд</span>
+      </a>
+      <a class="nav-link" href="history.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>История</span>
+      </a>
+      <a class="nav-link" href="docs.html"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4s-8-1.79-8-4zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"/></svg><span>База</span></a>
+      <a class="nav-link" href="batch.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg><span>Пакет</span>
+      </a>
+      <a class="nav-link" href="settings.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Настройки</span>
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <a class="nav-link" href="index.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg><span>Выйти</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <span class="title">Дашборд</span>
+      <span class="hint">Загрузите выписку для анализа</span>
+    </header>
+
+    <div class="content">
+      <section class="card upload">
+        <label for="file" class="dropzone">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          <p class="big" id="fileLabel">Перетащите выписку или выберите файл</p>
+          <p class="small">CSV, Excel или выгрузка для 1С</p>
+          <input type="file" id="file" accept=".csv,.xlsx,.txt,.pdf" style="display:none">
+        </label>
+        <div class="upload-actions">
+          <button id="analyzeBtn" class="btn btn-blue">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg> Анализировать
+          </button>
+          <button id="exportBtn" disabled class="btn btn-green">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Скачать Excel
+          </button>
+        </div>
+      </section>
+      <div id="error"></div>
+
+      <section class="card analyzing" id="analyzing">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <span class="spinner" style="border:2px solid rgba(1,74,198,.25);border-top-color:var(--brand-blue);width:20px;height:20px"></span>
+          <h3 class="sec-title" style="margin:0">Анализирую выписку…</h3>
+        </div>
+        <div class="progress"><span></span></div>
+        <div class="steps">
+          <span class="step">Разбор выписки</span>
+          <span class="step">Категоризация</span>
+          <span class="step">Метрики и кассовый разрыв</span>
+          <span class="step">Проверки и правовые риски</span>
+          <span class="step">Выводы ИИ</span>
+        </div>
+      </section>
+
+      <section class="card" id="plannedCard">
+        <h3 class="sec-title">Планируемые платежи <span class="sub">(заявки на выплату — учтём в прогнозе баланса)</span></h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px">
+          <input type="date" id="plDate" class="field-sm" style="min-width:150px">
+          <input type="number" id="plAmount" class="field-sm" placeholder="Сумма, ₽" style="min-width:120px">
+          <select id="plDir" class="field-sm" style="min-width:110px"><option value="out">расход</option><option value="in">приход</option></select>
+          <input id="plPurpose" class="field-sm" placeholder="Назначение (напр. аренда)" style="min-width:180px;flex:1">
+          <button class="btn btn-blue" id="plAdd" style="width:auto;padding:9px 18px">Добавить</button>
+        </div>
+        <div id="plList"></div>
+      </section>
+
+      <div id="results">
+        <section class="card" id="mgmtCard" style="display:none">
+          <div class="concl-head"><span id="mgmtLight" class="mgmt-light"></span><h3>Сводка для руководства</h3></div>
+          <p id="mgmtVerdict" class="mgmt-verdict"></p>
+          <div class="mgmt-grid">
+            <div><div class="l">Итог за период</div><div class="v" id="mgmtNet"></div></div>
+            <div><div class="l">Остаток на конец</div><div class="v" id="mgmtBal"></div></div>
+            <div><div class="l">Оценка здоровья</div><div class="v" id="mgmtGrade"></div></div>
+          </div>
+          <div id="mgmtRisks"></div>
+        </section>
+        <section class="card" id="ratingCard" style="display:none">
+          <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+            <div class="rating-badge" id="ratingBadge"><span class="g" id="ratingGrade"></span><span class="s" id="ratingScore"></span></div>
+            <div style="flex:1;min-width:220px">
+              <p class="label" style="margin-bottom:2px">Финансовое здоровье</p>
+              <h3 id="ratingLabel" style="font-size:20px;font-weight:700;margin-bottom:10px"></h3>
+              <div id="ratingFactors" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="kpi-grid">
+          <div class="card kpi"><p class="label">Остаток на начало</p><h3 class="value blue" id="cardOpening">—</h3></div>
+          <div class="card kpi"><p class="label">Остаток на конец</p><h3 class="value blue" id="cardBalance">—</h3></div>
+          <div class="card kpi green"><p class="label">Доходы за период</p><h3 class="value pos" id="cardIncome">—</h3></div>
+          <div class="card kpi red"><p class="label">Расходы за период</p><h3 class="value neg" id="cardExpense">—</h3></div>
+          <div class="card kpi amber"><p class="label">Чистый поток</p><h3 class="value" id="cardNet">—</h3></div>
+        </section>
+
+        <section id="gapBanner"></section>
+
+        <div class="card">
+          <h3 class="sec-title">Динамика баланса <span class="sub">(красная зона — кассовый разрыв)</span></h3>
+          <div class="chart-box"><canvas id="balanceChart"></canvas></div>
+        </div>
+
+        <div class="card" id="forecastCard" style="display:none">
+          <h3 class="sec-title">Прогноз баланса вперёд <span class="sub">(по регулярным платежам)</span></h3>
+          <div id="forecastGap"></div>
+          <div class="chart-box"><canvas id="forecastChart"></canvas></div>
+          <div class="recurring-list" id="recurringList"></div>
+        </div>
+
+        <div class="card" id="sandboxCard" style="display:none">
+          <h3 class="sec-title">Посмотреть, как изменится ситуация, если попробовать один из вариантов </h3>
+          <div id="sandboxBtns" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div id="sandboxResult" style="margin-top:16px"></div>
+        </div>
+
+        <div class="card">
+          <h3 class="sec-title">Аудиторский чек-лист</h3>
+          <div class="checks-grid" id="checks"></div>
+        </div>
+
+        <div class="card" id="complianceCard" style="display:none">
+          <h3 class="sec-title">Правовые риски <span class="sub">(признаки по проверяемым нормам · не юридическая консультация)</span></h3>
+          <div class="checks-grid" id="compliance"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3 class="sec-title">Структура расходов</h3>
+            <div class="chart-box-sm"><canvas id="expenseChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h3 class="sec-title">Денежный поток по видам <span class="sub">(ПБУ 23/2011)</span></h3>
+            <div class="chart-box-sm"><canvas id="activityChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card" id="insightsCard" style="display:none">
+          <h3 class="sec-title">Расширенная аналитика</h3>
+          <div class="checks-grid" id="insights"></div>
+        </div>
+
+        <div class="card" id="editCard" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+            <h3 class="sec-title" style="margin:0">Операции <span class="sub">(исправьте ошибки в назначении/категории — пересчитаем)</span></h3>
+            <button id="editToggle" style="background:var(--surface-variant);color:var(--on-surface);border:none;border-radius:12px;padding:10px 18px;font-weight:600;cursor:pointer">Показать и править</button>
+          </div>
+          <div id="editArea" style="margin-top:16px;display:none"></div>
+        </div>
+
+        <div class="card">
+          <div class="concl-head">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+            <h3>Выводы и рекомендации</h3>
+          </div>
+          <p id="summary">—</p>
+          <ul class="recs" id="recs"></ul>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// авто-выход на login при истёкшей сессии (вместо «не авторизован»)
+(() => { const _f = window.fetch; window.fetch = async (...a) => { const r = await _f(...a);
+  if (r.status === 401 && !location.pathname.endsWith('login.html')) location.replace('login.html'); return r; }; })();
+fetch('/api/me').catch(() => {});
+const IC = {
+  warn:'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z',
+  check:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+  cancel:'M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z',
+  excl:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z',
+  analytics:'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z',
+  download:'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z'
+};
+const ico = (d,cls)=>`<svg class="${cls||''}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
+const rub = n => Math.round(n).toLocaleString("ru-RU") + " ₽";
+const shortDate = s => { const d = new Date(s); return d.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit"}); };
+const shortDateFull = s => { const d = new Date(s); return d.toLocaleDateString("ru-RU",{day:"2-digit",month:"long",year:"numeric"}); };
+const escapeHtml = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let balanceChart, expenseChart, activityChart, forecastChart;
+let currentUploadId = null;
+let scenarios = [];
+
+const fileInput = document.getElementById("file");
+fileInput.addEventListener("change", () => {
+  const f = fileInput.files[0];
+  document.getElementById("fileLabel").textContent = f ? f.name : "Перетащите выписку или выберите файл";
+});
+document.getElementById("analyzeBtn").onclick = analyze;
+document.getElementById("exportBtn").onclick = exportExcel;
+document.getElementById("editToggle").onclick = loadTxEdit;
+
+async function loadTxEdit() {
+  if (!currentUploadId) return;
+  const area = document.getElementById("editArea");
+  area.style.display = "block";
+  area.innerHTML = '<span class="spinner"></span> Загружаю операции…';
+  try {
+    const resp = await fetch(`/api/uploads/${currentUploadId}/transactions`);
+    const txs = await resp.json();
+    if (!resp.ok) throw new Error(txs.error || ("HTTP " + resp.status));
+    if (!Array.isArray(txs) || txs.length === 0) { area.innerHTML = '<p class="check-detail">Операции не сохранены для этого анализа.</p>'; return; }
+    const rows = txs.map(t=>`<tr data-id="${t.id}">
+      <td class="muted" style="white-space:nowrap">${shortDate(t.date)}</td>
+      <td class="muted" style="white-space:nowrap">${rub(t.amount)}</td>
+      <td><select class="etx-dir field-sm">
+        <option value="out" ${t.direction==='out'?'selected':''}>расход</option>
+        <option value="in" ${t.direction==='in'?'selected':''}>приход</option></select></td>
+      <td><input class="etx-cp field-sm" value="${escapeHtml(t.counterparty||'')}"></td>
+      <td><input class="etx-cat field-sm" value="${escapeHtml(t.category||'')}"></td>
+      <td><input class="etx-pur field-sm" value="${escapeHtml(t.purpose||'')}"></td>
+    </tr>`).join("");
+    area.innerHTML = `<div class="table-scroll"><table><thead><tr>
+      <th>Дата</th><th>Сумма</th><th>Направление</th><th>Контрагент</th><th>Категория</th><th>Назначение</th></tr></thead>
+      <tbody id="etxBody">${rows}</tbody></table></div>
+      <button class="btn btn-blue" id="etxSave" style="width:auto;margin-top:16px">Сохранить и пересчитать</button>`;
+    document.getElementById("etxSave").onclick = saveTxEdits;
+  } catch (e) {
+    area.innerHTML = '<p style="color:var(--brand-red)">Не удалось загрузить операции: ' + escapeHtml(e.message) + '</p>';
+  }
+}
+
+async function saveTxEdits() {
+  const edits = [...document.querySelectorAll('#etxBody tr')].map(tr=>({
+    id: +tr.getAttribute('data-id'),
+    direction: tr.querySelector('.etx-dir').value,
+    counterparty: tr.querySelector('.etx-cp').value,
+    category: tr.querySelector('.etx-cat').value,
+    purpose: tr.querySelector('.etx-pur').value
+  }));
+  const btn = document.getElementById("etxSave");
+  btn.disabled = true; btn.textContent = "Пересчитываю…";
+  try {
+    const resp = await fetch(`/api/uploads/${currentUploadId}/edit`, {
+      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ edits })
+    });
+    const res = await resp.json();
+    if (!resp.ok) throw new Error(res.error || ("HTTP " + resp.status));
+    render(res);
+    window.scrollTo({ top:0, behavior:"smooth" });
+  } catch (e) {
+    document.getElementById("error").textContent = "Не удалось пересчитать: " + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = "Сохранить и пересчитать";
+  }
+}
+
+async function loadSavedUploadIfAny() {
+  const params = new URLSearchParams(window.location.search);
+  const uploadId = params.get("upload");
+  if (!uploadId) { return; }
+  const errEl = document.getElementById("error");
+  errEl.textContent = "";
+  try {
+    const resp = await fetch(`/api/uploads/${encodeURIComponent(uploadId)}`);
+    if (!resp.ok) {
+      const e = await resp.json().catch(() => ({ error: "ошибка сервера" }));
+      throw new Error(e.error || ("HTTP " + resp.status));
+    }
+    render(await resp.json());
+    document.getElementById("fileLabel").textContent = `Загружен сохраненный анализ #${uploadId}`;
+  } catch (e) {
+    errEl.textContent = "Не удалось открыть сохраненный анализ: " + e.message;
+  }
+}
+document.getElementById("plAdd").onclick = addPlanned;
+loadPlanned();
+
+async function loadPlanned(){
+  try {
+    const resp = await fetch("/api/planned");
+    if (!resp.ok) return;
+    const list = await resp.json();
+    const el = document.getElementById("plList");
+    if (!Array.isArray(list) || list.length === 0) { el.innerHTML = '<p class="check-detail">Пока нет запланированных платежей.</p>'; return; }
+    el.innerHTML = `<div class="table-scroll"><table><thead><tr><th>Дата</th><th>Сумма</th><th>Тип</th><th>Назначение</th><th></th></tr></thead><tbody>` +
+      list.map(p=>`<tr>
+        <td class="muted" style="white-space:nowrap">${shortDate(p.date)}</td>
+        <td class="${p.direction==='in'?'pos':'neg'}" style="white-space:nowrap;font-weight:600">${p.direction==='in'?'+':'−'}${rub(p.amount)}</td>
+        <td class="muted">${p.direction==='in'?'приход':'расход'}</td>
+        <td>${escapeHtml(p.purpose||'')}</td>
+        <td style="text-align:right"><button data-id="${p.id}" style="background:none;border:none;cursor:pointer;color:var(--brand-red);font-weight:700">✕</button></td>
+      </tr>`).join("") + `</tbody></table></div>`;
+    el.querySelectorAll("[data-id]").forEach(b=> b.onclick = () => delPlanned(b.getAttribute("data-id")));
+  } catch (e) { /* тихо */ }
+}
+
+async function addPlanned(){
+  const date = document.getElementById("plDate").value;
+  const amount = parseFloat(document.getElementById("plAmount").value);
+  const direction = document.getElementById("plDir").value;
+  const purpose = document.getElementById("plPurpose").value.trim();
+  const err = document.getElementById("error"); err.textContent = "";
+  if (!date || !(amount > 0)) { err.textContent = "Укажите дату и сумму планируемого платежа."; return; }
+  try {
+    const resp = await fetch("/api/planned", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ date, amount, direction, purpose }) });
+    const d = await resp.json();
+    if (!resp.ok) throw new Error(d.error || ("HTTP " + resp.status));
+    document.getElementById("plAmount").value = ""; document.getElementById("plPurpose").value = "";
+    loadPlanned();
+  } catch (e) { err.textContent = "Не удалось добавить: " + e.message; }
+}
+
+async function delPlanned(id){
+  try { const resp = await fetch("/api/planned/" + id, { method:"DELETE" }); if (resp.ok) loadPlanned(); } catch (e) {}
+}
+
+loadSavedUploadIfAny();
+
+async function analyze() {
+  const f = fileInput.files[0];
+  const errEl = document.getElementById("error");
+  errEl.textContent = "";
+  if (!f) { errEl.textContent = "Выберите файл выписки."; return; }
+  const btn = document.getElementById("analyzeBtn");
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Анализирую…';
+  const load = document.getElementById("analyzing");
+  const steps = load.querySelectorAll(".step");
+  let si = 0; steps.forEach(s=>s.classList.remove("act")); if (steps[0]) steps[0].classList.add("act");
+  load.classList.add("on");
+  const stepTimer = setInterval(()=>{ steps[si].classList.remove("act"); si=(si+1)%steps.length; steps[si].classList.add("act"); }, 900);
+  try {
+    const fd = new FormData(); fd.append("file", f);
+    const resp = await fetch("/audit", { method:"POST", body:fd });
+    if (!resp.ok) { const e = await resp.json().catch(()=>({error:"ошибка сервера"})); throw new Error(e.error || ("HTTP "+resp.status)); }
+    render(await resp.json());
+    document.getElementById("exportBtn").disabled = false;
+  } catch (e) {
+    errEl.textContent = "Не удалось проанализировать: " + e.message;
+  } finally {
+    clearInterval(stepTimer); load.classList.remove("on");
+    btn.disabled = false; btn.innerHTML = ico(IC.analytics) + ' Анализировать';
+  }
+}
+
+async function exportExcel() {
+  const errEl = document.getElementById("error"); errEl.textContent = "";
+  // Открыт сохранённый анализ → качаем по id (сервер строит Excel из сохранённого результата).
+  if (currentUploadId) {
+    window.location.href = `/api/uploads/${currentUploadId}/export`;
+    return;
+  }
+  const f = fileInput.files[0];
+  if (!f) { errEl.textContent = "Выберите файл выписки."; return; }
+  const btn = document.getElementById("exportBtn");
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Готовлю…';
+  try {
+    const fd = new FormData(); fd.append("file", f);
+    const resp = await fetch("/export", { method:"POST", body:fd });
+    if (!resp.ok) { const e = await resp.json().catch(()=>({error:"ошибка сервера"})); throw new Error(e.error || ("HTTP "+resp.status)); }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "finaudit.xlsx";
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  } catch (e) {
+    errEl.textContent = "Не удалось выгрузить Excel: " + e.message;
+  } finally {
+    btn.disabled = false; btn.innerHTML = ico(IC.download) + ' Скачать Excel';
+  }
+}
+
+// mr1 — сводка для руководства: светофор + вердикт + топ-риски (из готовых детерминированных данных)
+function renderMgmtSummary(r) {
+  const card = document.getElementById("mgmtCard");
+  const flags = r.compliance || [];
+  const checks = r.checks || [];
+  const hasGap = !!r.cash_gap;
+  const risks = flags.filter(f=>f.severity==="risk").length + checks.filter(c=>c.status==="danger").length;
+  const warns = flags.filter(f=>f.severity==="attention").length + checks.filter(c=>c.status==="warning").length;
+  const score = r.rating ? r.rating.score : null;
+
+  let color, verdict;
+  if (hasGap || risks>0 || (score!==null && score<55)) {
+    color = "#ef4444";
+    verdict = hasGap
+      ? `Внимание: прогнозируется кассовый разрыв ${shortDateFull(r.cash_gap.date)} — не хватает ${rub(r.cash_gap.shortfall)}. Нужны меры.`
+      : "Выявлены существенные риски — требуется вмешательство руководства.";
+  } else if (warns>0 || (score!==null && score<70)) {
+    color = "#f59e0b";
+    verdict = "В целом стабильно, но есть моменты, требующие внимания.";
+  } else {
+    color = "#16a34a";
+    verdict = "Финансовое состояние в норме, критичных рисков не выявлено.";
+  }
+
+  card.style.display = "block";
+  document.getElementById("mgmtLight").style.background = color;
+  document.getElementById("mgmtVerdict").textContent = verdict;
+
+  const net = r.net_cash_flow;
+  const netEl = document.getElementById("mgmtNet");
+  netEl.textContent = (net>=0?"+":"") + rub(net);
+  netEl.style.color = net<0 ? "#ef4444" : "#16a34a";
+  document.getElementById("mgmtBal").textContent = rub(r.closing_balance);
+  document.getElementById("mgmtGrade").textContent = r.rating ? (r.rating.grade + " · " + r.rating.score + "/100") : "—";
+
+  const items = [];
+  flags.filter(f=>f.severity==="risk").forEach(f=>items.push(["#ef4444", f.title]));
+  checks.filter(c=>c.status==="danger").forEach(c=>items.push(["#ef4444", c.title]));
+  flags.filter(f=>f.severity==="attention").forEach(f=>items.push(["#f59e0b", f.title]));
+  checks.filter(c=>c.status==="warning").forEach(c=>items.push(["#f59e0b", c.title]));
+  const top = items.slice(0,3);
+  const box = document.getElementById("mgmtRisks");
+  if (top.length) {
+    box.innerHTML = '<div class="mgmt-risk-title">Главное на контроль</div>' +
+      top.map(t=>`<div class="mgmt-risk"><span style="color:${t[0]}">●</span><span>${escapeHtml(t[1])}</span></div>`).join("");
+  } else {
+    box.innerHTML = '<div class="mgmt-risk" style="border:none"><span style="color:#16a34a">●</span><span>Существенных рисков не выявлено</span></div>';
+  }
+}
+
+function render(r) {
+  document.getElementById("results").style.display = "flex";
+  currentUploadId = r.upload_id || null;
+  document.getElementById("exportBtn").disabled = false;
+
+  renderMgmtSummary(r);
+
+  const rt = r.rating;
+  const rc = document.getElementById("ratingCard");
+  if (rt) {
+    rc.style.display = "block";
+    document.getElementById("ratingGrade").textContent = rt.grade;
+    document.getElementById("ratingScore").textContent = rt.score + "/100";
+    document.getElementById("ratingLabel").textContent = rt.label;
+    document.getElementById("ratingBadge").style.background = rt.score>=70 ? "#16a34a" : (rt.score>=55 ? "#f59e0b" : "#ef4444");
+    const pos = (rt.positives||[]).map(p=>`<span class="rfac good">✓ ${escapeHtml(p)}</span>`);
+    const neg = (rt.negatives||[]).map(n=>`<span class="rfac bad">! ${escapeHtml(n)}</span>`);
+    document.getElementById("ratingFactors").innerHTML = pos.concat(neg).join("");
+  } else {
+    rc.style.display = "none";
+  }
+
+  const net = r.net_cash_flow;
+  document.getElementById("cardOpening").textContent = rub(r.opening_balance);
+  document.getElementById("cardBalance").textContent = rub(r.closing_balance);
+  document.getElementById("cardBalance").className = "value " + (r.closing_balance<0?"neg":"blue");
+  document.getElementById("cardIncome").textContent = rub(r.total_income);
+  document.getElementById("cardExpense").textContent = rub(r.total_expense);
+  document.getElementById("cardNet").textContent = rub(net);
+  document.getElementById("cardNet").className = "value " + (net<0?"neg":"pos");
+
+  const gb = document.getElementById("gapBanner");
+  if (r.cash_gap) {
+    gb.innerHTML = `<div class="banner banner-error">${ico(IC.warn)}
+      <div><h4>Кассовый разрыв ${shortDateFull(r.cash_gap.date)} — не хватает ${rub(r.cash_gap.shortfall)}</h4>
+      <p style="margin-top:4px;opacity:.9">${escapeHtml(r.cash_gap.reason||"")}</p></div></div>`;
+  } else {
+    gb.innerHTML = `<div class="banner banner-ok">${ico(IC.check)}<span>Кассовых разрывов не обнаружено</span></div>`;
+  }
+
+  drawBalance(r.balance_series, r.cash_gap);
+  drawExpense(r.expense_structure);
+  drawActivity(r);
+  drawForecast(r.forecast);
+
+  const marks = { ok:[IC.check,"text-green"], warning:[IC.excl,"text-amber"], danger:[IC.cancel,"text-red"] };
+  document.getElementById("checks").innerHTML = (r.checks||[]).map(c=>{
+    const m = marks[c.status] || marks.ok;
+    return `<div class="check">
+      <div class="check-head">${ico(m[0],m[1])}<span class="check-title">${escapeHtml(c.title)}</span></div>
+      <p class="check-detail">${escapeHtml(c.detail||"")}</p>
+      ${c.recommendation?`<p class="check-rec">→ ${escapeHtml(c.recommendation)}</p>`:""}
+    </div>`;
+  }).join("") || '<p class="check-detail">нет проверок</p>';
+
+  const cmarks = { ok:[IC.check,"text-green"], attention:[IC.excl,"text-amber"], risk:[IC.cancel,"text-red"] };
+  const cc = document.getElementById("complianceCard");
+  const flags = r.compliance || [];
+  if (flags.length) {
+    cc.style.display = "block";
+    document.getElementById("compliance").innerHTML = flags.map(f=>{
+      const m = cmarks[f.severity] || cmarks.ok;
+      return `<div class="check">
+        <div class="check-head">${ico(m[0],m[1])}<span class="check-title">${escapeHtml(f.title)}</span></div>
+        <p class="check-detail">${escapeHtml(f.detail||"")}</p>
+        ${f.recommendation?`<p class="check-rec">→ ${escapeHtml(f.recommendation)}</p>`:""}
+        <p class="check-detail" style="margin-top:6px;opacity:.75">📖 ${escapeHtml(f.statute||"")}</p>
+      </div>`;
+    }).join("");
+  } else {
+    cc.style.display = "none";
+  }
+
+  scenarios = r.scenarios || [];
+  const sb = document.getElementById("sandboxCard");
+  if (scenarios.length && currentUploadId) {
+    sb.style.display = "block";
+    document.getElementById("sandboxResult").innerHTML = "";
+    const btns = document.getElementById("sandboxBtns");
+    btns.innerHTML = scenarios.map((s,i)=>`<button class="btn btn-blue" style="width:auto" data-sim="${i}">${escapeHtml(s.label)}</button>`).join("");
+    btns.querySelectorAll("[data-sim]").forEach(b=> b.onclick = () => runSim(scenarios[+b.getAttribute("data-sim")].action));
+  } else {
+    sb.style.display = "none";
+  }
+
+  const mfmt = p => { const q=String(p).split("-"); const nm=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"]; return q.length===2 ? ((nm[+q[1]-1]||q[1])+" "+q[0]) : p; };
+  const ins = [];
+  if (r.total_income > 0) {
+    ins.push(["Рентабельность (по потоку)", `Чистый поток = ${(r.net_cash_flow/r.total_income*100).toFixed(1)}% от доходов`]);
+  }
+  const cf = r.cash_flow || [];
+  if (cf.length >= 2) {
+    let hi=cf[0], lo=cf[0];
+    cf.forEach(m=>{ if(m.inflow>hi.inflow) hi=m; if(m.inflow<lo.inflow) lo=m; });
+    ins.push(["Сезонность выручки", `Пик: ${mfmt(hi.period)} (${rub(hi.inflow)}), спад: ${mfmt(lo.period)} (${rub(lo.inflow)})`]);
+    const avgIn = cf.reduce((a,m)=>a+m.inflow,0)/cf.length, avgOut = cf.reduce((a,m)=>a+m.outflow,0)/cf.length;
+    ins.push(["В среднем за месяц", `Приход ${rub(avgIn)} · расход ${rub(avgOut)}`]);
+  }
+  if (r.excluded_transfers > 0) {
+    ins.push(["Внутренние переводы исключены", `${rub(r.excluded_transfers)} переводов между своими счетами и займов не попали в выручку/расходы`]);
+  }
+  if (r.net_refunds > 0) {
+    ins.push(["Возвраты и сторно учтены", `${rub(r.net_refunds)} возвратов схлопнуто с исходными операциями, а не задвоено`]);
+  }
+  const icd = document.getElementById("insightsCard");
+  if (ins.length) {
+    icd.style.display = "block";
+    document.getElementById("insights").innerHTML = ins.map(x=>`<div class="check"><div class="check-title">${escapeHtml(x[0])}</div><p class="check-detail">${escapeHtml(x[1])}</p></div>`).join("");
+  } else {
+    icd.style.display = "none";
+  }
+
+  const ec = document.getElementById("editCard");
+  if (currentUploadId) {
+    ec.style.display = "block";
+    document.getElementById("editArea").style.display = "none";
+    document.getElementById("editArea").innerHTML = "";
+  } else {
+    ec.style.display = "none";
+  }
+
+  document.getElementById("summary").textContent = r.summary || "—";
+  document.getElementById("recs").innerHTML = (r.recommendations||[]).map(x=>
+    `<li class="rec-item"><span class="arrow">→</span><span>${escapeHtml(x)}</span></li>`).join("");
+}
+
+function drawBalance(series, gap) {
+  series = series || [];
+  const labels = series.map(p=>shortDate(p.date));
+  const data = series.map(p=>p.balance);
+  const gapIdx = gap ? series.findIndex(p=>p.date.slice(0,10)===gap.date.slice(0,10)) : -1;
+  if (balanceChart) balanceChart.destroy();
+  balanceChart = new Chart(document.getElementById("balanceChart"), {
+    type:"line",
+    data:{ labels, datasets:[{
+      data, borderWidth:2, tension:.2, pointRadius:data.map((_,i)=>i===gapIdx?6:0), pointBackgroundColor:"#ef4444",
+      pointHoverRadius:7, pointHitRadius:24, pointHoverBackgroundColor:"#2563eb", pointHoverBorderColor:"#fff", pointHoverBorderWidth:2,
+      segment:{ borderColor:ctx=>(ctx.p0.parsed.y<0||ctx.p1.parsed.y<0)?"#ef4444":"#16a34a" },
+      fill:true,
+      backgroundColor:ctx=>{ const {chart}=ctx; const {ctx:c,chartArea}=chart; if(!chartArea) return "rgba(34,197,94,.08)";
+        const g=c.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+        g.addColorStop(0,"rgba(34,197,94,.18)"); g.addColorStop(1,"rgba(239,68,68,.05)"); return g; }
+    }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:"index", intersect:false },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>"Баланс: "+rub(c.parsed.y) } } },
+      scales:{ y:{ ticks:{ color:"#64748b", callback:v=>(v/1000)+"к" }, grid:{ color:"#e2e8f0" } },
+        x:{ ticks:{ color:"#64748b", maxTicksLimit:12 }, grid:{ display:false } } } }
+  });
+}
+
+function drawExpense(es) {
+  es = es || [];
+  const labels = es.map(e=>e.category);
+  const data = es.map(e=>e.amount);
+  const colors = ["#2563eb","#8b5cf6","#ef4444","#f59e0b","#16a34a","#06b6d4","#ec4899","#94a3b8"];
+  if (expenseChart) expenseChart.destroy();
+  expenseChart = new Chart(document.getElementById("expenseChart"), {
+    type:"doughnut",
+    data:{ labels, datasets:[{ data, backgroundColor:colors, borderColor:"#fff", borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:(window.innerWidth<760?"bottom":"right"), labels:{ color:"#131b2e", boxWidth:12, font:{size:11},
+        generateLabels:(chart)=>{ const ds=chart.data.datasets[0]; const arr=ds.data; const total=arr.reduce((a,b)=>a+(+b||0),0);
+          return chart.data.labels.map((lbl,i)=>{ const v=+arr[i]||0; const p=total?(v/total*100):0;
+            return { text: lbl+" — "+p.toFixed(1)+"% ("+rub(v)+")", fillStyle:ds.backgroundColor[i], strokeStyle:"#fff", lineWidth:1, index:i }; }); } } },
+        tooltip:{ callbacks:{ label:c=>{ const t=c.dataset.data.reduce((a,b)=>a+(+b||0),0); const p=t?(c.parsed/t*100):0; return c.label+": "+rub(c.parsed)+" ("+p.toFixed(1)+"%)"; } } } } }
+  });
+}
+
+async function runSim(action) {
+  const res = document.getElementById("sandboxResult");
+  res.innerHTML = '<span class="spinner"></span> Считаю…';
+  try {
+    const resp = await fetch(`/api/uploads/${currentUploadId}/simulate`, {
+      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(action)
+    });
+    const d = await resp.json();
+    if (!resp.ok) throw new Error(d.error || ("HTTP " + resp.status));
+    res.innerHTML = simCompare(d.before, d.after);
+  } catch (e) {
+    res.innerHTML = '<span style="color:var(--brand-red)">Не удалось посчитать: ' + escapeHtml(e.message) + '</span>';
+  }
+}
+
+function simCompare(b, a) {
+  const gap = s => s.hasGap ? `разрыв ${s.gapDate}, не хватает ${rub(s.gapShortfall)}` : "разрыва нет";
+  const fixed = b.hasGap && !a.hasGap;
+  return `<div class="two-col">
+    <div class="check"><div class="check-title">Сейчас</div><p class="check-detail">Мин. остаток: ${rub(b.minBalance)}<br>${gap(b)}</p></div>
+    <div class="check" ${fixed?'style="border:1px solid var(--brand-green)"':''}><div class="check-title">После изменения</div><p class="check-detail">Мин. остаток: ${rub(a.minBalance)}<br>${gap(a)}</p></div>
+  </div>${fixed?'<p class="check-rec" style="margin-top:10px">✓ Это изменение закрывает кассовый разрыв</p>':''}`;
+}
+
+function drawForecast(fc) {
+  const card = document.getElementById("forecastCard");
+  if (!fc || !fc.series || fc.series.length === 0) { card.style.display = "none"; return; }
+  card.style.display = "block";
+
+  const gb = document.getElementById("forecastGap");
+  if (fc.gap) {
+    gb.innerHTML = `<div class="banner banner-error" style="margin-bottom:16px">${ico(IC.warn)}
+      <div><h4>Прогноз: разрыв ${shortDateFull(fc.gap.date)} — не хватит ${rub(fc.gap.shortfall)}</h4>
+      <p style="margin-top:4px;opacity:.9">${escapeHtml(fc.gap.reason||"")}</p></div></div>`;
+  } else {
+    gb.innerHTML = `<div class="banner banner-ok" style="margin-bottom:16px">${ico(IC.check)}<span>В ближайшие ${fc.horizon_days} дней разрыв не предвидится</span></div>`;
+  }
+
+  const labels = fc.series.map(p=>shortDate(p.date));
+  const data = fc.series.map(p=>p.balance);
+  const gapIdx = fc.gap ? fc.series.findIndex(p=>p.date.slice(0,10)===fc.gap.date.slice(0,10)) : -1;
+  if (forecastChart) forecastChart.destroy();
+  forecastChart = new Chart(document.getElementById("forecastChart"), {
+    type:"line",
+    data:{ labels, datasets:[{
+      data, borderWidth:2, tension:.15, borderDash:[6,4],
+      pointRadius:data.map((_,i)=>i===gapIdx?6:0), pointBackgroundColor:"#ef4444",
+      pointHoverRadius:7, pointHitRadius:24, pointHoverBackgroundColor:"#2563eb", pointHoverBorderColor:"#fff", pointHoverBorderWidth:2,
+      segment:{ borderColor:ctx=>(ctx.p0.parsed.y<0||ctx.p1.parsed.y<0)?"#ef4444":"#2563eb" },
+      fill:false
+    }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:"index", intersect:false },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>"Прогноз: "+rub(c.parsed.y) } } },
+      scales:{ y:{ ticks:{ color:"#64748b", callback:v=>(v/1000)+"к" }, grid:{ color:"#e2e8f0" } },
+        x:{ ticks:{ color:"#64748b", maxTicksLimit:12 }, grid:{ display:false } } } }
+  });
+
+  const rl = document.getElementById("recurringList");
+  rl.innerHTML = (fc.recurring||[]).slice(0,8).map(rp=>{
+    const out = rp.direction === "out";
+    return `<div class="rec-item2">
+      <span class="${out?'out':'in'}">${out?'↓':'↑'}</span>
+      <span>${escapeHtml(rp.counterparty)} · ~${rp.period_days} дн · с ${shortDate(rp.next_date)}</span>
+      <span class="amt ${out?'out':'in'}">${out?'−':'+'}${rub(rp.avg_amount)}</span>
+    </div>`;
+  }).join("");
+}
+
+function drawActivity(r) {
+  if (activityChart) activityChart.destroy();
+  const vals = [r.operating_cash_flow, r.investing_cash_flow, r.financing_cash_flow];
+  activityChart = new Chart(document.getElementById("activityChart"), {
+    type:"bar",
+    data:{ labels:["Операционный","Инвестиционный","Финансовый"],
+      datasets:[{ data:vals, backgroundColor:vals.map(v=>v<0?"#ef4444":"#16a34a"), borderRadius:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>rub(c.parsed.y) } } },
+      scales:{ y:{ ticks:{ color:"#64748b", callback:v=>(v/1000)+"к" }, grid:{ color:"#e2e8f0" } },
+        x:{ ticks:{ color:"#64748b" }, grid:{ display:false } } } }
+  });
+}
+</script>
+</body>
+</html>

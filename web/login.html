@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAudit — Вход</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#014ac6; --primary-container:#3265e0; --on-primary-container:#eeefff;
+    --on-surface:#131b2e; --on-surface-variant:#434655; --outline:#737686; --outline-variant:#c3c6d7;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:#f8fafc; color:var(--on-surface); line-height:1.5; -webkit-font-smoothing:antialiased;
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px; }
+  svg{ display:block; }
+  a{ text-decoration:none; color:inherit; }
+
+  .wrap{ width:100%; max-width:440px; }
+  .logo-head{ display:flex; flex-direction:column; align-items:center; margin-bottom:32px; }
+  .logo{ width:48px; height:48px; background:var(--primary); border-radius:14px; display:flex; align-items:center;
+    justify-content:center; margin-bottom:16px; box-shadow:0 10px 20px -6px rgba(1,74,198,.5); }
+  .logo svg{ width:28px; height:28px; color:#fff; }
+  .logo-head h1{ font-size:24px; font-weight:600; }
+  .logo-head p{ color:var(--on-surface-variant); margin-top:4px; }
+
+  .card{ background:rgba(255,255,255,.85); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 10px 25px -5px rgba(15,23,42,.05); padding:32px; }
+  .tabs{ display:flex; border-bottom:1px solid var(--outline-variant); margin-bottom:32px; }
+  .tab{ flex:1; padding:12px; font-weight:600; font-family:inherit; font-size:15px; background:none; border:none;
+    cursor:pointer; color:#64748b; border-bottom:2px solid transparent; transition:color .2s, border-color .2s; }
+  .tab.active{ color:var(--primary); border-bottom-color:var(--primary); }
+
+  form{ display:flex; flex-direction:column; gap:20px; }
+  form.hidden{ display:none; }
+  .field-group label{ display:block; font-size:12px; color:var(--on-surface-variant); margin:0 0 8px 4px; }
+  .field-group .row{ display:flex; justify-content:space-between; align-items:center; margin:0 4px 8px; }
+  .field-group .row label{ margin:0; }
+  .link{ font-size:12px; color:var(--primary); }
+  .link:hover{ text-decoration:underline; }
+  .opt{ font-size:10px; text-transform:uppercase; font-weight:700; color:var(--outline); }
+  .field{ width:100%; padding:12px 16px; border-radius:12px; border:1px solid var(--outline-variant);
+    background:#fff; font-size:15px; font-family:inherit; color:var(--on-surface); outline:none; }
+  .field:focus{ border-color:var(--primary); box-shadow:0 0 0 3px rgba(1,74,198,.15); }
+  .submit{ width:100%; background:var(--primary-container); color:var(--on-primary-container); font-weight:600;
+    padding:16px; border:none; border-radius:12px; cursor:pointer; font-size:15px; font-family:inherit;
+    box-shadow:0 6px 14px -6px rgba(1,74,198,.5); transition:filter .2s, transform .1s; }
+  .submit:hover{ filter:brightness(1.08); }
+  .submit:active{ transform:scale(.98); }
+  .agree{ display:flex; align-items:flex-start; gap:9px; margin:2px 4px 18px; font-size:13px;
+    color:var(--on-surface-variant); line-height:1.4; cursor:pointer; }
+  .agree input{ margin-top:1px; width:16px; height:16px; accent-color:var(--primary); flex:none; cursor:pointer; }
+  .agree a{ color:var(--primary); }
+  .error{ margin-top:16px; font-size:14px; color:#dc2626; }
+  .error.hidden{ display:none; }
+  .foot{ margin-top:32px; display:flex; align-items:center; justify-content:center; gap:8px;
+    color:var(--on-surface-variant); opacity:.6; font-size:14px; }
+  .foot svg{ width:18px; height:18px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="logo-head">
+    <a href="index.html" class="logo" aria-label="FinAudit">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>
+    </a>
+    <h1>FinAudit</h1>
+    <p>Финансовый аудит для бизнеса</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="login-tab-btn" onclick="switchTab('login')">Вход</button>
+      <button class="tab" id="register-tab-btn" onclick="switchTab('register')">Регистрация</button>
+    </div>
+
+    <form id="login-form" onsubmit="submitLogin(event)">
+      <div class="field-group">
+        <label>Email</label>
+        <input class="field" id="login-email" placeholder="name@company.ru" required type="email"/>
+      </div>
+      <div class="field-group">
+        <div class="row"><label>Пароль</label><a class="link" href="#">Забыли пароль?</a></div>
+        <input class="field" id="login-password" placeholder="••••••••" required type="password"/>
+      </div>
+      <button class="submit" type="submit">Войти</button>
+    </form>
+
+    <form class="hidden" id="register-form" onsubmit="submitRegister(event)">
+      <div class="field-group">
+        <label>Ваше имя</label>
+        <input class="field" id="register-name" placeholder="Александр" required type="text"/>
+      </div>
+      <div class="field-group">
+        <label>Название компании <span class="opt">(необязательно)</span></label>
+        <input class="field" id="register-company" placeholder="ООО Ромашка" type="text"/>
+      </div>
+      <div class="field-group">
+        <label>Форма</label>
+        <select class="field" id="register-legal">
+          <option value="ip">ИП</option>
+          <option value="ooo">ООО</option>
+          <option value="self_employed">Самозанятый</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Налоговый режим <span class="opt">(для налоговых и правовых советов)</span></label>
+        <select class="field" id="register-regime">
+          <option value="usn">УСН</option>
+          <option value="npd">НПД (самозанятый)</option>
+          <option value="osno">ОСНО</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Email</label>
+        <input class="field" id="register-email" placeholder="name@company.ru" required type="email"/>
+      </div>
+      <div class="field-group">
+        <label>Пароль</label>
+        <input class="field" id="register-password" placeholder="Минимум 8 символов" required type="password"/>
+      </div>
+      <label class="agree">
+        <input type="checkbox" id="register-agree"/>
+        <span>Я принимаю <a href="privacy.html" target="_blank" rel="noopener">политику конфиденциальности</a></span>
+      </label>
+      <button class="submit" type="submit">Создать аккаунт</button>
+    </form>
+
+    <p class="error hidden" id="auth-error"></p>
+  </div>
+
+  <div class="foot">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+    <span>Ваши данные обрабатываются безопасно</span>
+  </div>
+</main>
+
+<script>
+  function switchTab(tab){
+    const lb=document.getElementById('login-tab-btn'), rb=document.getElementById('register-tab-btn');
+    const lf=document.getElementById('login-form'), rf=document.getElementById('register-form');
+    if(tab==='login'){ lb.className='tab active'; rb.className='tab'; lf.classList.remove('hidden'); rf.classList.add('hidden'); }
+    else { rb.className='tab active'; lb.className='tab'; rf.classList.remove('hidden'); lf.classList.add('hidden'); }
+  }
+  function showError(message){
+    const error = document.getElementById('auth-error');
+    if(!message){ error.classList.add('hidden'); error.textContent = ''; return; }
+    error.textContent = message;
+    error.classList.remove('hidden');
+  }
+  async function postJSON(url, payload){
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({}));
+    if(!response.ok){ throw new Error(data.error || 'Ошибка запроса'); }
+    return data;
+  }
+  async function submitLogin(e){
+    e.preventDefault();
+    showError('');
+    try {
+      await postJSON('/api/login', {
+        email: document.getElementById('login-email').value.trim(),
+        password: document.getElementById('login-password').value
+      });
+      window.location.href = 'dashboard.html';
+    } catch (err) { showError(err.message || 'Ошибка входа'); }
+  }
+  async function submitRegister(e){
+    e.preventDefault();
+    showError('');
+    if(!document.getElementById('register-agree').checked){
+      showError('Подтвердите согласие с политикой конфиденциальности'); return;
+    }
+    try {
+      await postJSON('/api/register', {
+        email: document.getElementById('register-email').value.trim(),
+        password: document.getElementById('register-password').value,
+        name: document.getElementById('register-name').value.trim(),
+        company: document.getElementById('register-company').value.trim(),
+        legal_form: document.getElementById('register-legal').value,
+        tax_regime: document.getElementById('register-regime').value
+      });
+      window.location.href = 'dashboard.html';
+    } catch (err) { showError(err.message || 'Ошибка регистрации'); }
+  }
+</script>
+</body>
+</html>

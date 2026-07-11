@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAudit — История загрузок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#014ac6; --primary-container:#3265e0; --on-primary-container:#eeefff;
+    --surface:#faf8ff; --surface-bright:#faf8ff; --on-surface:#131b2e; --on-surface-variant:#434655;
+    --surface-container:#eaedff; --surface-container-low:#f2f3ff; --surface-variant:#dae2fc;
+    --outline:#737686; --outline-variant:#c3c6d7; --brand-green:#16a34a; --brand-red:#ef4444;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface); color:var(--on-surface); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  a{ text-decoration:none; color:inherit; }
+  svg{ display:block; }
+
+  .layout{ display:flex; min-height:100vh; }
+  .sidebar{ width:256px; flex:none; background:var(--surface-container); position:fixed; top:0; left:0;
+    height:100vh; display:flex; flex-direction:column; padding:16px; z-index:50; }
+  .sidebar .brand{ padding:0 12px; margin-bottom:28px; }
+  .sidebar .brand h1{ font-size:22px; font-weight:700; color:var(--primary); }
+  .sidebar .brand p{ font-size:12px; color:var(--on-surface-variant); }
+  .nav{ display:flex; flex-direction:column; gap:8px; flex:1; }
+  .nav-link{ display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px;
+    color:var(--on-surface-variant); font-weight:500; transition:background .2s; }
+  .nav-link svg{ width:22px; height:22px; flex:none; }
+  .nav-link:hover{ background:var(--surface-variant); }
+  .nav-link.active{ background:var(--primary-container); color:var(--on-primary-container); }
+  .sidebar-foot{ margin-top:auto; padding-top:24px; border-top:1px solid rgba(115,118,134,.2); }
+
+  .main{ margin-left:256px; flex:1; min-width:0; }
+  .topbar{ position:sticky; top:0; z-index:40; height:64px; background:rgba(250,248,255,.8);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 1px 3px rgba(15,23,42,.05);
+    display:flex; align-items:center; padding:0 40px; }
+  .topbar .title{ font-size:22px; font-weight:700; color:var(--primary); }
+  .content{ padding:40px; max-width:1200px; margin:0 auto; }
+
+  .page-head{ display:flex; flex-direction:column; gap:16px; margin-bottom:32px; }
+  .page-head h2{ font-size:28px; font-weight:700; margin-bottom:6px; }
+  .page-head p{ color:var(--on-surface-variant); }
+  .btn-upload{ display:inline-flex; align-items:center; gap:8px; padding:10px 24px; background:var(--primary-container);
+    color:var(--on-primary-container); border-radius:12px; font-weight:600; width:fit-content;
+    box-shadow:0 4px 10px -4px rgba(1,74,198,.5); transition:filter .2s, transform .1s; }
+  .btn-upload:hover{ filter:brightness(1.05); } .btn-upload:active{ transform:scale(.97); }
+  .btn-upload svg{ width:20px; height:20px; }
+
+  .card{ background:rgba(255,255,255,.85); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 10px 25px -5px rgba(15,23,42,.05); overflow:hidden; }
+  .table-scroll{ width:100%; overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; text-align:left; min-width:720px; }
+  thead tr{ background:var(--surface-container-low); border-bottom:1px solid var(--outline-variant);
+    color:var(--on-surface-variant); font-size:14px; }
+  th{ padding:16px 24px; font-weight:600; white-space:nowrap; }
+  td{ padding:20px 24px; vertical-align:top; }
+  tbody tr{ border-top:1px solid var(--outline-variant); transition:background .15s; }
+  tbody tr:hover{ background:var(--surface-bright); }
+  .ta-right{ text-align:right; } .ta-center{ text-align:center; }
+  .file-date{ font-weight:600; } .file-name{ font-size:12px; color:var(--on-surface-variant); }
+  .pos{ color:var(--brand-green); } .neg{ color:var(--brand-red); }
+  .muted{ color:var(--on-surface-variant); }
+  .badge{ display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:9999px;
+    font-size:12px; font-weight:700; }
+  .badge svg{ width:14px; height:14px; }
+  .badge-red{ background:#fee2e2; color:var(--brand-red); }
+  .badge-green{ background:#dcfce7; color:var(--brand-green); }
+  .open-link{ display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border-radius:10px; color:var(--primary); }
+  .open-link:hover{ background:var(--surface-variant); }
+  .open-link svg{ width:20px; height:20px; }
+  .del-btn{ background:none; border:none; cursor:pointer; color:var(--brand-red); vertical-align:middle; }
+  .del-btn:hover{ background:#fee2e2; }
+  #empty-state{ margin-top:16px; color:var(--on-surface-variant); }
+  #empty-state.hidden{ display:none; }
+  #error{ margin-top:16px; color:var(--brand-red); }
+
+  @media(max-width:900px){
+    .layout{ flex-direction:column; }
+    .sidebar{ position:static; width:100%; height:auto; flex-direction:row; align-items:center; padding:8px 12px; gap:6px; overflow-x:auto; }
+    .sidebar .brand{ margin:0 8px 0 4px; } .sidebar .brand p{ display:none; }
+    .nav{ flex-direction:row; gap:4px; flex:0 0 auto; } .nav-link span{ display:none; } .nav-link{ padding:10px; }
+    .sidebar-foot{ margin:0; padding:0; border:none; }
+    .main{ margin-left:0; } .topbar{ padding:0 16px; } .content{ padding:20px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand"><h1>FinAudit</h1><p>Финансовый аудит</p></div>
+    <nav class="nav">
+      <a class="nav-link" href="dashboard.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg><span>Дашборд</span>
+      </a>
+      <a class="nav-link active" href="history.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg><span>История</span>
+      </a>
+      <a class="nav-link" href="docs.html"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C7.58 3 4 4.79 4 7s3.58 4 8 4 8-1.79 8-4-3.58-4-8-4zM4 9v3c0 2.21 3.58 4 8 4s8-1.79 8-4V9c0 2.21-3.58 4-8 4s-8-1.79-8-4zm0 5v3c0 2.21 3.58 4 8 4s8-1.79 8-4v-3c0 2.21-3.58 4-8 4s-8-1.79-8-4z"/></svg><span>База</span></a>
+      <a class="nav-link" href="batch.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg><span>Пакет</span>
+      </a>
+      <a class="nav-link" href="settings.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><span>Настройки</span>
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <a class="nav-link" href="index.html">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg><span>Выйти</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar"><span class="title">История</span></header>
+    <div class="content">
+      <section class="page-head">
+        <div>
+          <h2>История загрузок</h2>
+          <p>Архив выписок и анализов — переоткрывайте без повторной загрузки</p>
+        </div>
+        <a href="dashboard.html" class="btn-upload">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8l4-4 4 4zm-3-5V3.5L18.5 9H13z"/></svg>
+          <span>Загрузить новую выписку</span>
+        </a>
+      </section>
+
+      <div class="card">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Дата загрузки</th>
+                <th>Период</th>
+                <th>Доходы / Расходы</th>
+                <th class="ta-right">Чистый поток</th>
+                <th class="ta-center">Статус</th>
+                <th class="ta-right">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="uploads-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="hidden" id="empty-state">Пока нет загруженных выписок.</p>
+      <p id="error"></p>
+    </div>
+  </main>
+</div>
+
+<script>
+// авто-выход на login при истёкшей сессии (вместо «не авторизован»)
+(() => { const _f = window.fetch; window.fetch = async (...a) => { const r = await _f(...a);
+  if (r.status === 401 && !location.pathname.endsWith('login.html')) location.replace('login.html'); return r; }; })();
+fetch('/api/me').catch(() => {});
+  const IC = {
+    warn:'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z',
+    check:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+    eye:'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+    download:'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
+    trash:'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z'
+  };
+  const ico = d => `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
+  const rub = n => Math.round(Number(n || 0)).toLocaleString("ru-RU") + " ₽";
+  const fmtDate = s => {
+    if(!s){ return "—"; }
+    const d = new Date(s);
+    return d.toLocaleDateString("ru-RU") + " " + d.toLocaleTimeString("ru-RU", { hour:"2-digit", minute:"2-digit" });
+  };
+  const fmtPeriod = (from, to) => {
+    if(!from || !to){ return "—"; }
+    return new Date(from).toLocaleDateString("ru-RU") + " — " + new Date(to).toLocaleDateString("ru-RU");
+  };
+  const escapeHtml = s => String(s || '').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  function rowHtml(item){
+    const hasGap = item.hasCashGap === true;
+    const hasSummary = item.totalIncome !== null && item.totalExpense !== null && item.netCashFlow !== null;
+    const net = Number(item.netCashFlow || 0);
+    const status = hasGap
+      ? `<span class="badge badge-red">${ico(IC.warn)}Кассовый разрыв</span>`
+      : `<span class="badge badge-green">${ico(IC.check)}Без разрыва</span>`;
+    return `<tr>
+      <td><div class="file-date">${fmtDate(item.createdAt)}</div><div class="file-name">${escapeHtml(item.filename)}</div></td>
+      <td>${fmtPeriod(item.periodFrom, item.periodTo)}</td>
+      <td>${hasSummary ? `<div class="pos">+${rub(item.totalIncome)}</div><div class="neg">−${rub(item.totalExpense)}</div>` : '<span class="muted">нет данных</span>'}</td>
+      <td class="ta-right ${net < 0 ? 'neg' : 'pos'}" style="font-weight:600">${hasSummary ? rub(net) : '—'}</td>
+      <td class="ta-center">${hasSummary ? status : '<span class="muted" style="font-size:12px">в обработке</span>'}</td>
+      <td class="ta-right" style="white-space:nowrap">
+        <a href="dashboard.html?upload=${item.id}" class="open-link" title="Открыть">${ico(IC.eye)}</a>
+        <a href="/api/uploads/${item.id}/export" class="open-link" title="Скачать Excel">${ico(IC.download)}</a>
+        <button class="open-link del-btn" title="Удалить" data-del="${item.id}">${ico(IC.trash)}</button>
+      </td>
+    </tr>`;
+  }
+
+  async function loadUploads(){
+    const err = document.getElementById('error');
+    const body = document.getElementById('uploads-body');
+    const empty = document.getElementById('empty-state');
+    err.textContent = '';
+    try {
+      const resp = await fetch('/api/uploads');
+      const data = await resp.json().catch(() => []);
+      if(!resp.ok){ throw new Error(data.error || ('HTTP ' + resp.status)); }
+      if(!Array.isArray(data) || data.length === 0){
+        body.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      body.innerHTML = data.map(rowHtml).join('');
+      body.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteUpload(b.getAttribute('data-del')));
+    } catch (e) {
+      err.textContent = 'Не удалось загрузить историю: ' + e.message;
+    }
+  }
+
+  async function deleteUpload(id){
+    if(!confirm('Удалить этот анализ безвозвратно?')){ return; }
+    try {
+      const resp = await fetch('/api/uploads/' + id, { method:'DELETE' });
+      if(!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error(e.error || ('HTTP ' + resp.status)); }
+      loadUploads();
+    } catch (e) {
+      document.getElementById('error').textContent = 'Не удалось удалить: ' + e.message;
+    }
+  }
+
+  loadUploads();
+</script>
+</body>
+</html>

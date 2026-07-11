@@ -1,0 +1,35 @@
+{
+  "persona": "ip_retail_usn6",
+  "year": 2026,
+  "total_income": 4504517.36,
+  "total_expense": 3510439.06,
+  "net_cash_flow": 994078.3,
+  "quarters": [
+    {
+      "quarter": 1,
+      "income": 554748.53,
+      "expense": 775706.33,
+      "net": -220957.8
+    },
+    {
+      "quarter": 2,
+      "income": 1385678.76,
+      "expense": 878003.16,
+      "net": 507675.6
+    },
+    {
+      "quarter": 3,
+      "income": 794309.2,
+      "expense": 863317.14,
+      "net": -69007.94
+    },
+    {
+      "quarter": 4,
+      "income": 1769780.87,
+      "expense": 993412.43,
+      "net": 776368.44
+    }
+  ],
+  "has_cash_gap": true,
+  "cash_gap_reason": "совпали крупные списания: «Зарплата продавцу за месяц» (65000 ₽)"
+}

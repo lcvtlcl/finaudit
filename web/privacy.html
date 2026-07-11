@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAudit — Политика конфиденциальности</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{ --primary:#014ac6; --on-surface:#131b2e; --on-surface-variant:#434655; --surface:#faf8ff; --outline-variant:#c3c6d7; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface); color:var(--on-surface); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a{ color:var(--primary); text-decoration:none; } a:hover{ text-decoration:underline; }
+  svg{ display:block; }
+  .head{ border-bottom:1px solid rgba(19,27,46,.06); }
+  .head-inner{ max-width:820px; margin:0 auto; padding:18px 20px; display:flex; align-items:center; gap:10px; }
+  .head svg{ width:28px; height:28px; color:var(--primary); }
+  .head .brand{ font-weight:700; font-size:20px; color:var(--primary); }
+  main{ max-width:820px; margin:0 auto; padding:40px 20px 64px; }
+  h1{ font-size:28px; font-weight:700; margin-bottom:8px; }
+  .meta{ color:var(--on-surface-variant); font-size:14px; margin-bottom:28px; }
+  h2{ font-size:19px; font-weight:600; margin:28px 0 10px; }
+  p{ margin-bottom:12px; }
+  ul{ margin:0 0 12px 20px; } li{ margin-bottom:6px; }
+  .note{ background:#fff; border:1px solid var(--outline-variant); border-radius:12px; padding:16px 18px; color:var(--on-surface-variant); font-size:14px; margin-top:28px; }
+  .back{ display:inline-block; margin-top:28px; font-weight:600; }
+</style>
+</head>
+<body>
+<header class="head">
+  <div class="head-inner">
+    <a href="index.html" style="display:flex;align-items:center;gap:10px">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      <span class="brand">FinAudit</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <h1>Политика конфиденциальности</h1>
+  <p class="meta">Дата вступления в силу: июль 2026. Оператор: команда разработчиков FinAudit. Связь — через <a href="https://github.com/lcvtlcl/finaudit/issues" target="_blank" rel="noopener">issues репозитория проекта</a>.</p>
+
+  <h2>1. Общие положения</h2>
+  <p>Настоящая Политика описывает, какие данные обрабатывает сервис FinAudit (далее — Сервис) и как мы их защищаем. Обработка ведётся в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных». Используя Сервис, пользователь соглашается с настоящей Политикой.</p>
+
+  <h2>2. Какие данные мы обрабатываем</h2>
+  <ul>
+    <li><b>Учётные данные:</b> email, имя, название компании, хеш пароля (сам пароль мы не храним).</li>
+    <li><b>Финансовые данные:</b> банковские выписки и извлечённые из них операции (дата, сумма, контрагент, ИНН, назначение, категория), которые вы загружаете для анализа, и результаты анализа.</li>
+    <li><b>Ключи ИИ-провайдеров:</b> если вы подключаете свой ключ, он хранится в зашифрованном виде (AES-256-GCM) и используется только для отправки в модель агрегированных метрик.</li>
+    <li><b>Технические данные:</b> идентификаторы сессии, служебные логи (без содержимого выписок).</li>
+  </ul>
+  <p>Мы не собираем данные, не относящиеся к работе Сервиса, и не используем ваши финансовые данные для рекламы.</p>
+
+  <h2>3. Цели обработки</h2>
+  <p>Предоставление функций Сервиса: разбор выписки, расчёт метрик, прогноз кассового разрыва, аудиторские и правовые проверки, формирование выводов, хранение истории и документов пользователя.</p>
+
+  <h2>4. Принцип обработки и передача третьим лицам</h2>
+  <ul>
+    <li>Все финансовые расчёты выполняет наш код на нашей стороне; в модель ИИ уходят только агрегированные метрики, а не сырые выписки.</li>
+    <li>При использовании ИИ-объяснений агрегаты передаются провайдеру модели. Если вы подключили свой ключ, обращение идёт в ваш аккаунт у провайдера — мы не являемся посредником в этих данных.</li>
+    <li>Мы не продаём ваши данные и не передаём их иным третьим лицам.</li>
+  </ul>
+
+  <h2>5. Хранение и защита</h2>
+  <ul>
+    <li>Данные хранятся в базе данных Сервиса; сырые файлы — в защищённом хранилище.</li>
+    <li>Ключи провайдеров шифруются (AES-256-GCM); пароли — только в виде хеша.</li>
+    <li>Доступ к базам данных закрыт из публичной сети; соединения — по HTTPS (TLS).</li>
+    <li>Доступ к данным имеют только уполномоченные лица в объёме, необходимом для работы Сервиса.</li>
+  </ul>
+
+  <h2>6. Self-hosted вариант (данные остаются у вас)</h2>
+  <p>Доступно развёртывание Сервиса на вашей инфраструктуре (своя база данных, свой ключ ИИ). В этом случае ваши выписки и результаты анализа не покидают ваш периметр, и мы не имеем к ним доступа.</p>
+
+  <h2>7. Сроки хранения</h2>
+  <p>Данные хранятся, пока активна ваша учётная запись и пока это необходимо для целей обработки. Вы можете удалить конкретный анализ, документ или запись в любой момент. При удалении аккаунта связанные данные удаляются в срок 30 дней.</p>
+
+  <h2>8. Права пользователя</h2>
+  <p>Вы вправе: получить сведения об обработке своих данных; потребовать их уточнения, блокирования или удаления; отозвать согласие на обработку. Для реализации прав обратитесь через <a href="https://github.com/lcvtlcl/finaudit/issues" target="_blank" rel="noopener">issues репозитория проекта</a>. Мы ответим в разумный срок.</p>
+
+  <h2>9. Использование cookie</h2>
+  <p>Сервис использует только технически необходимые cookie (сессия авторизации). Рекламных и трекинговых cookie нет.</p>
+
+  <h2>10. Изменения политики</h2>
+  <p>Мы можем обновлять Политику; актуальная версия публикуется на этой странице. О существенных изменениях мы уведомляем пользователей.</p>
+
+  <h2>11. Контакты</h2>
+  <p>По вопросам обработки данных обращайтесь через <a href="https://github.com/lcvtlcl/finaudit/issues" target="_blank" rel="noopener">issues репозитория проекта</a>.</p>
+
+  <a class="back" href="index.html">← На главную</a>
+</main>
+</body>
+</html>

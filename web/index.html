@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinAudit — Финансовый аудит для бизнеса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --primary:#014ac6; --primary-container:#3265e0; --on-primary-container:#eeefff;
+    --surface:#faf8ff; --on-surface:#131b2e; --on-surface-variant:#434655;
+    --surface-container:#eaedff; --surface-container-low:#f2f3ff; --surface-variant:#dae2fc;
+    --outline:#737686; --outline-variant:#c3c6d7;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface); color:var(--on-surface); line-height:1.5;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  a{ text-decoration:none; color:inherit; }
+  svg{ display:block; }
+  .container{ width:100%; max-width:1200px; margin:0 auto; padding:0 16px; }
+  @media(min-width:768px){ .container{ padding:0 40px; } }
+
+  /* header */
+  .site-header{ position:sticky; top:0; z-index:50; background:rgba(250,248,255,.85);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid rgba(19,27,46,.06); }
+  .header-inner{ display:flex; align-items:center; justify-content:space-between; height:64px; }
+  .brand{ display:flex; align-items:center; gap:8px; color:var(--primary); font-weight:700; font-size:22px; }
+  .brand svg{ width:30px; height:30px; }
+  .nav{ display:flex; align-items:center; gap:10px; }
+
+  .btn{ display:inline-flex; align-items:center; justify-content:center; font-weight:600;
+    border-radius:12px; cursor:pointer; border:1px solid transparent; white-space:nowrap;
+    transition:transform .1s ease, background-color .2s ease, color .2s ease; }
+  .btn:active{ transform:scale(.96); }
+  .btn-text{ padding:8px 12px; color:var(--on-surface); }
+  .btn-text:hover{ color:var(--primary); }
+  .btn-primary{ padding:10px 22px; background:var(--primary-container); color:var(--on-primary-container); }
+  .btn-primary:hover{ background:var(--primary); }
+  .btn-outline{ padding:14px 28px; border-color:var(--outline); color:var(--on-surface); }
+  .btn-outline:hover{ background:var(--surface-variant); }
+
+  /* hero */
+  .hero{ text-align:center; padding:64px 0 56px; display:flex; flex-direction:column; align-items:center; }
+  .hero-inner{ max-width:768px; width:100%; }
+  .hero h1{ font-size:clamp(2rem,6vw,3.5rem); font-weight:700; line-height:1.1; margin-bottom:20px; }
+  .hero .lead{ font-size:clamp(1rem,2.4vw,1.15rem); color:var(--on-surface-variant); margin-bottom:28px; }
+  .badge{ display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;
+    padding:8px 16px; background:var(--surface-container); border:1px solid var(--outline-variant);
+    border-radius:9999px; font-size:14px; margin-bottom:36px; }
+  .badge svg{ width:18px; height:18px; color:var(--primary); flex:none; }
+  .badge .label{ color:var(--on-surface-variant); text-transform:uppercase; letter-spacing:.05em; }
+  .badge .value{ color:var(--on-surface); font-weight:600; }
+  .cta-row{ display:flex; flex-direction:column; gap:16px; width:100%; align-items:center; }
+  .cta-row .btn{ width:100%; max-width:320px; padding:16px 28px; font-size:16px; }
+  .cta-row .btn-primary{ box-shadow:0 12px 22px -10px rgba(1,74,198,.6); }
+  @media(min-width:640px){ .cta-row{ flex-direction:row; justify-content:center; } .cta-row .btn{ width:auto; } }
+
+  /* features */
+  .features{ display:grid; grid-template-columns:1fr; gap:20px; margin-top:72px; width:100%; }
+  @media(min-width:600px){ .features{ grid-template-columns:repeat(2,1fr); } }
+  @media(min-width:1000px){ .features{ grid-template-columns:repeat(4,1fr); } }
+  .card{ background:rgba(255,255,255,.8); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 10px 25px -5px rgba(15,23,42,.05);
+    padding:24px; text-align:left; display:flex; flex-direction:column; gap:16px; }
+  .icon-badge{ width:48px; height:48px; border-radius:9999px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .icon-badge svg{ width:26px; height:26px; }
+  .icon-blue{ background:#dbeafe; color:var(--primary); }
+  .icon-amber{ background:#fef3c7; color:#f59e0b; }
+  .icon-green{ background:#dcfce7; color:#16a34a; }
+  .icon-indigo{ background:#e0e7ff; color:var(--primary-container); }
+  .card h3{ font-size:16px; font-weight:600; margin-bottom:4px; }
+  .card p{ font-size:14px; color:var(--on-surface-variant); }
+
+  /* trust */
+  .trust{ background:var(--surface-container-low); padding:80px 0; }
+  .trust-grid{ display:grid; grid-template-columns:1fr; gap:48px; align-items:center; }
+  @media(min-width:1000px){ .trust-grid{ grid-template-columns:1fr 1fr; } }
+  .trust h2{ font-size:clamp(1.6rem,4vw,1.9rem); font-weight:700; margin-bottom:20px; }
+  .trust .body{ color:var(--on-surface-variant); margin-bottom:24px; }
+  .check-list{ list-style:none; display:flex; flex-direction:column; gap:16px; }
+  .check-list li{ display:flex; align-items:flex-start; gap:12px; }
+  .check-list svg{ width:24px; height:24px; color:#16a34a; flex:none; margin-top:2px; }
+  .check-list h4{ font-weight:600; }
+  .check-list p{ color:var(--on-surface-variant); }
+  .illus{ background:rgba(255,255,255,.8); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 10px 25px -5px rgba(15,23,42,.05);
+    padding:28px; display:flex; align-items:center; justify-content:center; }
+  .illus svg{ width:100%; height:auto; max-width:380px; }
+
+  /* footer */
+  .site-footer{ border-top:1px solid var(--outline-variant); background:#fff; }
+  .footer-inner{ display:flex; flex-direction:column; gap:16px; align-items:center; justify-content:space-between; padding:24px 0; text-align:center; }
+  @media(min-width:640px){ .footer-inner{ flex-direction:row; text-align:left; } }
+  .footer-brand{ display:flex; align-items:center; gap:8px; font-weight:700; }
+  .footer-brand svg{ width:22px; height:22px; color:var(--primary); flex:none; }
+  .footer-brand .muted{ margin-left:8px; }
+  .footer-links{ display:flex; gap:24px; font-size:14px; }
+  .footer-links a{ color:var(--on-surface-variant); }
+  .footer-links a:hover{ color:var(--primary); }
+  .muted{ color:var(--on-surface-variant); font-size:14px; font-weight:400; }
+
+  /* pricing */
+  .pricing{ padding:80px 0; }
+  .pricing-head{ text-align:center; max-width:640px; margin:0 auto 48px; }
+  .pricing-head h2{ font-size:clamp(1.6rem,4vw,2rem); font-weight:700; margin-bottom:12px; }
+  .pricing-head p{ color:var(--on-surface-variant); }
+  .price-grid{ display:grid; grid-template-columns:1fr; gap:24px; }
+  @media(min-width:900px){ .price-grid{ grid-template-columns:repeat(3,1fr); align-items:stretch; } }
+  .price-card{ position:relative; background:#fff; border:1px solid var(--outline-variant); border-radius:20px;
+    padding:32px 28px; display:flex; flex-direction:column; gap:20px; box-shadow:0 10px 25px -12px rgba(15,23,42,.08); }
+  .price-card.featured{ border:2px solid var(--primary); box-shadow:0 20px 40px -16px rgba(1,74,198,.35); }
+  .price-card.selfhosted{ background:var(--on-surface); border-color:transparent; }
+  .price-card.selfhosted .plan-name{ color:#aebef0; }
+  .plan-badge{ position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+    background:var(--primary); color:#fff; font-size:12px; font-weight:600; padding:5px 14px; border-radius:9999px; letter-spacing:.02em; }
+  .plan-name{ font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--on-surface-variant); }
+  .plan-desc{ font-size:14px; color:var(--on-surface-variant); margin-top:6px; }
+  .price-card.selfhosted .plan-desc{ color:#c9d4f5; }
+  .plan-price{ display:flex; align-items:baseline; gap:6px; }
+  .plan-price .amount{ font-size:38px; font-weight:700; line-height:1; }
+  .price-card.selfhosted .plan-price .amount{ color:#fff; }
+  .plan-price .per{ font-size:15px; color:var(--on-surface-variant); }
+  .price-card.selfhosted .plan-price .per{ color:#c9d4f5; }
+  .plan-feats{ list-style:none; display:flex; flex-direction:column; gap:12px; flex:1; }
+  .plan-feats li{ display:flex; align-items:flex-start; gap:10px; font-size:14px; }
+  .price-card.selfhosted .plan-feats li{ color:#e7ecfb; }
+  .plan-feats svg{ width:18px; height:18px; color:#16a34a; flex:none; margin-top:2px; }
+  .price-card.selfhosted .plan-feats svg{ color:#7ee0a2; }
+  .price-card .btn{ width:100%; padding:14px; font-size:15px; }
+  .btn-light{ background:#fff; color:var(--primary); }
+  .btn-light:hover{ background:var(--surface-container); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html" aria-label="FinAudit">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      <span>FinAudit</span>
+    </a>
+    <nav class="nav">
+      <a href="#pricing" class="btn btn-text">Тарифы</a>
+      <a href="login.html" class="btn btn-text">Войти</a>
+      <a href="login.html" class="btn btn-primary">Попробовать</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="container hero">
+    <div class="hero-inner">
+      <h1>Всё, что нужно для контроля денег бизнеса</h1>
+      <p class="lead">Загрузите банковскую выписку — FinAudit покажет понятную картину финансов и заранее предупредит о кассовом разрыве. Без бухгалтерского жаргона.</p>
+
+      <div class="badge">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <span class="label">Кому подойдёт:</span>
+        <span class="value">владельцам малого и среднего бизнеса без штатного бухгалтера</span>
+      </div>
+
+      <div class="cta-row">
+        <a href="login.html" class="btn btn-primary">Попробовать</a>
+        <a href="login.html" class="btn btn-outline">Войти в кабинет</a>
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="card">
+        <div class="icon-badge icon-blue">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
+        </div>
+        <div><h3>Структура расходов</h3><p>Куда реально уходят деньги вашего бизнеса.</p></div>
+      </div>
+      <div class="card">
+        <div class="icon-badge icon-amber">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        </div>
+        <div><h3>Прогноз разрыва</h3><p>Видно день, когда счёт уйдёт в минус, и почему.</p></div>
+      </div>
+      <div class="card">
+        <div class="icon-badge icon-green">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 7h-9v2h9V7zm0 8h-9v2h9v-2zM5.54 11L2 7.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L5.54 11zm0 8L2 15.46l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41L5.54 19z"/></svg>
+        </div>
+        <div><h3>Чек-лист ошибок</h3><p>Проверка типовых ошибок ведения бизнеса.</p></div>
+      </div>
+      <div class="card">
+        <div class="icon-badge icon-indigo">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        </div>
+        <div><h3>Простые выводы</h3><p>Понятные рекомендации и экспорт в Excel.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust">
+    <div class="container trust-grid">
+      <div>
+        <h2>Цифрам можно верить</h2>
+        <p class="body">В отличие от обычных ИИ-помощников, FinAudit не «угадывает» суммы нейросетью. Все числа считает код — точно и проверяемо. Искусственный интеллект только переводит результат на человеческий язык.</p>
+        <ul class="check-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            <div><h4>Мгновенный импорт</h4><p>Перетащите файл выписки — система разберёт его за секунды.</p></div>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            <div><h4>Никаких терминов</h4><p>Только «пришло», «ушло» и «осталось».</p></div>
+          </li>
+        </ul>
+      </div>
+      <div class="illus">
+        <svg viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="График баланса с зоной кассового разрыва">
+          <line x1="20" y1="50" x2="300" y2="50" stroke="#e6e9f5" stroke-width="1.5"/>
+          <line x1="20" y1="90" x2="300" y2="90" stroke="#e6e9f5" stroke-width="1.5"/>
+          <line x1="20" y1="170" x2="300" y2="170" stroke="#e6e9f5" stroke-width="1.5"/>
+          <line x1="20" y1="130" x2="300" y2="130" stroke="#c3c6d7" stroke-width="1.5" stroke-dasharray="5 5"/>
+          <text x="24" y="126" font-family="Inter,Arial,sans-serif" font-size="10" fill="#737686">0 ₽</text>
+          <path d="M205 130 L230 168 L270 140 L290 130 Z" fill="#fee2e2"/>
+          <polyline points="20,108 80,64 140,72 185,110 205,130" fill="none" stroke="#014ac6" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="205,130 230,168 270,140 300,122" fill="none" stroke="#dc2626" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="230" cy="168" r="5.5" fill="#dc2626"/>
+          <circle cx="230" cy="168" r="10" fill="#dc2626" fill-opacity="0.18"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing container" id="pricing">
+    <div class="pricing-head">
+      <h2>Тарифы</h2>
+      <p>Начните бесплатно. А если данные не должны покидать периметр — разверните FinAudit на своём сервере.</p>
+    </div>
+    <div class="price-grid">
+
+      <div class="price-card">
+        <div>
+          <div class="plan-name">Старт</div>
+          <p class="plan-desc">Попробовать и оценить пользу</p>
+        </div>
+        <div class="plan-price"><span class="amount">0 ₽</span><span class="per">/ навсегда</span></div>
+        <ul class="plan-feats">
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>1 бизнес, до 3 анализов в месяц</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Структура расходов и рейтинг здоровья</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Прогноз кассового разрыва</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Экспорт в Excel</span></li>
+        </ul>
+        <a href="login.html" class="btn btn-outline">Начать бесплатно</a>
+      </div>
+
+      <div class="price-card featured">
+        <div class="plan-badge">Популярный</div>
+        <div>
+          <div class="plan-name">Про</div>
+          <p class="plan-desc">Полный аудит для действующего бизнеса</p>
+        </div>
+        <div class="plan-price"><span class="amount">1 490 ₽</span><span class="per">/ мес</span></div>
+        <ul class="plan-feats">
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Всё из «Старт», без лимита анализов</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Правовые риски и проверка контрагентов по ЕГРЮЛ/ЕГРИП</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Прогноз баланса вперёд и платёжный календарь</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Пакетный анализ, история, база документов</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Ручные правки с пересчётом · свой ключ ИИ</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Учёт формы бизнеса (ИП / ООО / самозанятый)</span></li>
+        </ul>
+        <a href="login.html" class="btn btn-primary">Попробовать 14 дней</a>
+      </div>
+
+      <div class="price-card selfhosted">
+        <div>
+          <div class="plan-name">Self-hosted</div>
+          <p class="plan-desc">Когда данные не должны покидать периметр</p>
+        </div>
+        <div class="plan-price"><span class="amount">от 49 000 ₽</span><span class="per">/ год</span></div>
+        <ul class="plan-feats">
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Развёртывание на вашей инфраструктуре</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Своя БД и свой ключ ИИ — выписки не уходят наружу</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Docker-образ и гайд по установке</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Лицензия и поддержка</span></li>
+          <li><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>Для бухгалтерских аутсорсеров и чувствительных ниш</span></li>
+        </ul>
+        <a href="https://github.com/lcvtlcl/finaudit/blob/main/SELF_HOSTED.md" target="_blank" rel="noopener" class="btn btn-light">Гайд по развёртыванию</a>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      <span>FinAudit</span>
+      <span class="muted">© 2026</span>
+    </div>
+    <div class="footer-links">
+      <a href="privacy.html">Политика конфиденциальности</a>
+      <a href="https://github.com/lcvtlcl/finaudit" target="_blank" rel="noopener">Исходный код</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
